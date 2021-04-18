@@ -224,14 +224,13 @@ class Hand {
 		$this->spel = $spel;
 		$this->kaarten = Array();
 		$this->haal_hand_uit_database();
+		$this->sorteer();
 	}
 	function draw($klikbare_kaarten){//weergeef alle kaarten in de hand
-		//kijk of de speler aan de beurt is
 		if($klikbare_kaarten){
 			echo "<form method='post'>";
 		}
-		for($i=0; $i<count($this->kaarten); $i++){
-			$kaart = $this->kaarten[$i];
+		foreach($this->kaarten as $kaart){
 			$kaart->draw($klikbare_kaarten);
 		}
 		if($klikbare_kaarten){
@@ -279,8 +278,17 @@ class Hand {
 	function aantal_aangeklikte_kaarten(){
 		return count($this->bepaal_aangeklikte_kaarten());
 	}
-	
+	function sorteer(){
+		//sorteer de kaarten van de speler in $kaarten
+		$sorteer_voorkeur = "laag_hoog";
+		usort($this->kaarten, "vergelijk_".$sorteer_voorkeur);
+	}
 }
+
+function vergelijk_laag_hoog($kaart_1, $kaart_2){
+	return $kaart_1->kaart_id - $kaart_2->kaart_id;
+}
+
 
 //vind de naam van een speler uit de database
 function get_name_from_player($speler){
