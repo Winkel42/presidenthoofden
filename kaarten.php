@@ -614,6 +614,7 @@ class Spel {
 					echo $conn->error."<br>".$sql."<br>";
 				}
 				update($kamer_id);
+				update(-1);
 				return;
 			}
 			
@@ -637,6 +638,7 @@ class Spel {
 			}
 		}
 		update($kamer_id);
+		update(-1);//zodat je op de thuispagina de voortgang kan zien
 	}
 	function verwijder_geklikte_kaarten($speler){
 		global $conn;
@@ -734,6 +736,7 @@ function begin_spel(){
 		echo $conn->error."<br>".$sql;
 	}
 	update($kamer_id);
+	update(-1);
 }
 	
 
@@ -1117,6 +1120,8 @@ function ververs(){
 				echo $conn->error."<br>".$sql."<br>";
 			}
 			$_POST = Array();
+			update($kamer_id);
+			update(-1);
 			return ververs();
 		}
 	}

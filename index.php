@@ -35,7 +35,8 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 		echo"<form method='post'><input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
 		//geef links naar de kamers, en geef aan welke spelers daar zijn
 		$namen_kamers = Array("park", "13gang", "noordkantine", "tuin");
-		echo "<form class='tabelformulier'>";
+		echo "<form class='tabelformulier'>
+			<p class='tabelformulier'><span class='tabelvakje'></span><span class='tabelvakje'>Aanwezige spelers</span><span class='tabelvakje'>Voortgang spel</span></p>";
 		foreach(Array(0,1,2,3) as $kamer_id){
 			echo "<p class='tabelformulier'>";
 			$spelers = Array();
@@ -49,7 +50,7 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 			}
 			echo "<input type='submit' class='tabelformulier' formaction='/".$namen_kamers[$kamer_id].".php' value='".$namen_kamers[$kamer_id]."'>
 				<span class='tabelvakje'>
-				Aanwezige spelers: ";
+				";
 			foreach($spelers as $speler){
 				if($speler != $spelers[0]){
 					echo ", ";
@@ -59,7 +60,21 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 			if(!$spelers){
 				echo "niemand";
 			}
-			echo "</span></p><br>";
+			echo "</span><span class='tabelvakje'>";
+			//nu gaan we kijken of er een spel is, en zo ja, hoe ver dat spel is
+			$sql = "SELECT kaart_id FROM actieve_spellen A, spellen_spelers_kaarten B WHERE A.spel_id=B.spel_id AND kamer_id=".$kamer_id;
+			$result = $conn->query($sql);
+			if(!$result){
+				echo $conn->error."<br>".$sql."<br>";
+			}
+			$voortgang = 100*(64-$result->num_rows)/64;
+			if($voortgang == 100){
+				echo "Geen spel aan de gang";
+			}
+			else{
+				echo "<progress value=".$voortgang." max='100'></progress>";
+			}
+			echo "</span></p>";
 		}	
 		echo "</form>";
 	}

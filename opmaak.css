@@ -81,6 +81,7 @@ form.tabelformulier{
 p.tabelformulier{
 	display: table-row;
 }
+
 label.tabelformulier{
 	display: table-cell;
 }
@@ -95,6 +96,7 @@ span.tabelvakje{
 	padding-left:20px;
 	font-size: 19px;
 	display: table-cell;
+	padding-bottom: 20px;
 }
 
 .menu_knop{
@@ -117,4 +119,8 @@ h4 {
 	font-style: normal;
 	font-weight: bold;
 	font-size: 17px;
+}
+
+progress{
+	color: green;
 }

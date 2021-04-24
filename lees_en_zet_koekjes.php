@@ -85,6 +85,11 @@ function controleer_log_uit(){
 			setcookie("token", "", \time()-30);
 			$_POST = Array();
 			$log_in_informatie = Array("ingelogd" => False);
+			//we moeten ook de speler uit elke kamer halen
+			$sql = "DELETE FROM kamers_spelers WHERE speler_id=".$ingelogde_speler;
+			if(!$conn->query($sql)){
+				echo $conn->error."<br>".$sql."<br>";
+			}
 		}
 	}
 	return $log_in_informatie;
