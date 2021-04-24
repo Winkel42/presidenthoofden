@@ -1,0 +1,104 @@
+body{
+	font-family: "Verdana", "Times New Roman";
+}
+
+.kaart{
+	width: 80px;
+}
+
+.niet_geselecteerd {
+	border: 3px solid black;
+	margin: 5px;
+	
+}
+
+.geselecteerd {
+	border: 6px solid green;
+	margin: 2px;
+}
+
+.onklikbaar {
+	border: 3px solid black;
+	margin: 5px;
+}
+
+.onzichtbaar {
+	border: 3px solid black;
+	margin: 5px;
+}
+
+.speler_knop{
+	display: inline;
+	width: 75px;
+	height: 100px;
+}
+
+h2{
+	display: block;
+}
+
+h2.aan_de_beurt{
+	color: green;
+}
+
+.hand{
+}
+
+span{
+	display:inline-block;
+}
+
+td.naam_en_knop{
+	width:150px;
+	text-align:top
+}
+
+table.kaarten{
+	margin-bottom : 100px;
+}
+
+td{
+	max-width: 1400px;
+}
+
+h3 {
+	display: inline;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 17px;
+}
+
+.in_stapel{
+	border: 3px solid black;
+	margin-left: -5px;
+	margin-right: -5px;
+	margin-bottom : -75px;
+}
+
+form.tabelformulier{
+	display: table;
+}
+p.tabelformulier{
+	display: table-row;
+}
+label.tabelformulier{
+	display: table-cell;
+}
+input.tabelformulier{
+	display: table-cell;
+	width: 150px;
+	height: 40px;
+	font-size: 17px;
+	font-weight: bold;
+}
+span.tabelvakje{
+	padding-left:20px;
+	font-size: 19px;
+	display: table-cell;
+}
+
+.menu_knop{
+	min-width: 100px;
+	height: 30px;
+	font-size: 19px;
+}
