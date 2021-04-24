@@ -17,7 +17,8 @@ if ($conn->connect_error) {
 $aantal_eigen_veranderingen = 0;
 
 function teken_algemene_dingen_voor_spel(){
-	vernieuw_functie();
+	global $kamer_id;
+	vernieuw_functie($kamer_id);
 }
 
 function teken_algemene_dingen_na_spel(){
@@ -235,7 +236,6 @@ class Kaart {
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
-			update();
 		}
 		//als het de klaver 8 is, is de kaart altijd aangeklikt
 		if($this->kleur == 'klaver' && $this->waarde == '8'){
@@ -509,11 +509,11 @@ class Spel {
 			}
 		}
 		echo "</table>";
-		//als er nog maar 1 persoon over is, is het spel voorbij, en moet je opnieuw kunnen beginnen
+		//als er nog maar 1 persoon over is, is het spel voorbij, en moet je het spel kunnen beëindigen
 		if($aantal_spelers_in_spel <= 1){			
 			global $kamer_id;
-			$nieuw_spel_knop_naam = "opnieuwdelen".$kamer_id;
-			echo "<form method='post'><input style='width:400px'; type='submit' name='".$nieuw_spel_knop_naam."'; value='Delen'/></form>";
+			$nieuw_spel_knop_naam = "einde_spel".$kamer_id;
+			echo "<form method='post'><input class='delen' style='width:400px'; type='submit' name='".$nieuw_spel_knop_naam."'; value='Beëindig het spel'/></form>";
 		}
 		//kijk welke spelers er te wachten staan
 		$aanwezige_spelers = bepaal_aanwezige_spelers();
@@ -539,7 +539,8 @@ class Spel {
 		if(!$conn->query($sql)){
 			echo $conn->error."<br>".$sql."<br>";
 		}
-		update();
+		global $kamer_id;
+		update($kamer_id);
 	}
 	function volgende_aan_de_beurt(){
 		global $conn;
@@ -554,10 +555,11 @@ class Spel {
 		if(!$conn->query($sql)){
 			echo $conn->error."<br>".$sql."<br>";
 		}
-		update();
+		global $kamer_id;
+		update($kamer_id);
 	}
 	function speel($speler, $kaarten){
-		global $stapel_diepte, $conn, $aantal_overgebleven_spelers;
+		global $stapel_diepte, $conn, $aantal_overgebleven_spelers, $kamer_id;
 		$stapel_diepte++;
 		$_POST = Array();
 		foreach($kaarten as $kaart){
@@ -611,7 +613,7 @@ class Spel {
 				if(!$conn->query($sql)){
 					echo $conn->error."<br>".$sql."<br>";
 				}
-				update();
+				update($kamer_id);
 				return;
 			}
 			
@@ -634,7 +636,7 @@ class Spel {
 				echo $conn->error."<br>".$sql."<br>";
 			}
 		}
-		update();
+		update($kamer_id);
 	}
 	function verwijder_geklikte_kaarten($speler){
 		global $conn;
@@ -667,7 +669,12 @@ function begin_spel(){
 		while($row = $result->fetch_assoc()){
 			$spelers[] = $row['speler_id'];
 		}
-	}	
+	}
+	//zet die spelers niet meer op klaar voor een nieuw spel
+	$sql = "UPDATE kamers_spelers SET klaar_voor_nieuw_potje=0 WHERE kamer_id=".$kamer_id;
+	if(!$conn->query($sql)){
+		echo $conn->error."<br>".$sql."<br>"; 
+	}
 	//creeer het goede id voor dit spel
 	$sql = "SELECT MAX(spel_id) FROM spellen_spelers;";
 	$result = $conn->query($sql);
@@ -683,7 +690,7 @@ function begin_spel(){
 		}
 	}
 	//creeer het spel in de database
-	$sql = "INSERT INTO actieve_spellen  VALUES(".$kamer_id.",".$spel_id.");";
+	$sql = "INSERT INTO actieve_spellen  VALUES(".$kamer_id.",".$spel_id.",CURRENT_TIMESTAMP);";
 	if(!$conn->query($sql)){
 		echo $conn->error."<br>".$sql."<br>";
 	}	
@@ -726,7 +733,7 @@ function begin_spel(){
 	if(!$conn->query($sql)){
 		echo $conn->error."<br>".$sql;
 	}
-	update();
+	update($kamer_id);
 }
 	
 
@@ -892,16 +899,53 @@ function bepaal_globale_variabelen($spel){
 
 function teken_zonder_spel(){
 	teken_algemene_dingen_voor_spel();
-	global $kamer_id;
-	$nieuw_spel_knop_naam = "opnieuwdelen".$kamer_id;
-	echo "<form method='post'><input style='width:400px'; type='submit' name='".$nieuw_spel_knop_naam."'; value='Delen'/></form>";
+	global $kamer_id, $conn;
+	$log_in_informatie = bepaal_log_in_informatie();
+	$ingelogd = $log_in_informatie['ingelogd'];
+	if($ingelogd){
+		$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
+		//kijk of de speler al is aangeschoven, en of die al klaar is
+		$sql = "SELECT klaar_voor_nieuw_potje FROM kamers_spelers WHERE kamer_id=".$kamer_id." AND speler_id=".$ingelogde_speler;
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		$aangeschoven = False;
+		while($row = $result->fetch_assoc()){
+			$aangeschoven = True;
+			$klaar = ($row['klaar_voor_nieuw_potje'] == 1);
+		}
+		if($aangeschoven){
+			if($klaar){
+				$knop_naam = "niet_klaar".$kamer_id;
+				$klasse = 'delen groen';
+			}
+			else{
+				$knop_naam = "klaar".$kamer_id;
+				$klasse = 'delen';
+			}
+			echo "<form method='post'><input class='".$klasse."' style='width:400px'; type='submit' name='".$knop_naam."'; value='Klaar voor een nieuw potje'/></form>";
+		}
+	}
 	echo "aanwezige spelers: ";
 	$aanwezige_spelers = bepaal_aanwezige_spelers();
 	foreach($aanwezige_spelers as $speler){
 		if($speler != $aanwezige_spelers[0]){
 			echo ", ";
 		}
-		echo get_name_from_player($speler);
+		//kijk of de speler al klaar is voor het nieuwe spel
+		$sql = "SELECT speler_id FROM kamers_spelers WHERE kamer_id=".$kamer_id." AND speler_id=".$speler." AND klaar_voor_nieuw_potje = 1";
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		if($result->num_rows){
+			$klasse= "class='groen'";
+		}
+		else{
+			$klasse= "";
+		}
+		echo "<h4 ".$klasse." >".get_name_from_player($speler)."</h4>";
 	}
 	if(!$aanwezige_spelers){
 		echo " er is niemand";
@@ -943,12 +987,12 @@ function ververs(){
 		$er_is_een_spel = True;
 	}
 	else{
-		$nieuw_spel_knop_naam = "opnieuwdelen".$kamer_id;
-		if(isset($_POST[$nieuw_spel_knop_naam]) && $_POST[$nieuw_spel_knop_naam] != "doe niets"){
-			begin_spel();
-			return ververs();
-		}
 		$er_is_een_spel = False;
+	}
+	$log_in_informatie = bepaal_log_in_informatie();
+	$ingelogd = $log_in_informatie['ingelogd'];
+	if($ingelogd){
+		$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
 	}
 	if($er_is_een_spel){
 		$spel = maak_spel_vanuit_database($spel_id);
@@ -990,13 +1034,13 @@ function ververs(){
 					if(!$conn->query($sql)){
 						echo $conn->error."<br>".$sql."<br>";
 					}
-					update();
+					update($kamer_id);
 					//in de database zetten dat de speler gepast heeft
 					$sql = "UPDATE spellen_spelers SET gepast = 1 WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
 					if(!$conn->query($sql)){
 						echo $conn->error."<br>".$sql."<br>";
 					}
-					update();
+					update($kamer_id);
 					break;
 				case "Stapel weg":				
 					//als de persoon geen kaarten meer heeft, dan is de stapel net ontploft en wordt de persoon dus laatste
@@ -1012,12 +1056,12 @@ function ververs(){
 						if(!$conn->query($sql)){
 							echo $conn->error."<br>".$sql."<br>";
 						}
-						update();
+						update($kamer_id);
 						$sql = "UPDATE spellen_spelers SET stand = ".count($spel->spelers)." WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
 						if(!$conn->query($sql)){
 							echo $conn->error."<br>".$sql."<br>";
 						}
-						update();
+						update($kamer_id);
 						//dan moet ook alvast de volgende aan beurt
 						$spel->volgende_aan_de_beurt();
 					}			
@@ -1054,63 +1098,99 @@ function ververs(){
 			$spel->volgende_aan_de_beurt();
 			return ververs();
 		}
+		
+		$eind_spel_knop_naam = "einde_spel".$kamer_id;
+		if(isset($_POST[$eind_spel_knop_naam])){
+			//eerst zetten we er nog even de stand van de laatste persoon bij
+			$sql = "UPDATE spellen_spelers SET stand=(
+						SELECT MIN(stand) FROM spellen_spelers WHERE spel_id=".$spel_id." AND stand+1 NOT IN(
+							SELECT stand FROM spellen_spelers WHERE spel_id=".$spel_id."
+						)
+					)
+					+1 WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
+			if(!$conn->query($sql)){
+				echo $conn->error."<br>".$sql."<br>";
+			}
+			//vergeet niet om het huidige spel uit de actieve spellen te verwijderen
+			$sql = "DELETE FROM actieve_spellen WHERE kamer_id=".$kamer_id;
+			if(!$conn->query($sql)){
+				echo $conn->error."<br>".$sql."<br>";
+			}
+			$_POST = Array();
+			return ververs();
+		}
 	}
 	//hierna komen nog algemene dingen die ook moeten gebeuren als er geen spel beschikbaar is	
 	
 	//kijk of er een nieuw spel wordt begonnen
-	$nieuw_spel_knop_naam = "opnieuwdelen".$kamer_id;
-	if(isset($_POST[$nieuw_spel_knop_naam]) && $_POST[$nieuw_spel_knop_naam] != "doe niets"){
-		//eerst zetten we er nog even de stand van de laatste persoon bij
-		$sql = "UPDATE spellen_spelers SET stand=(
-					SELECT MIN(stand) FROM spellen_spelers WHERE spel_id=".$spel_id." AND stand+1 NOT IN(
-						SELECT stand FROM spellen_spelers WHERE spel_id=".$spel_id."
-					)
-				)
-				+1 WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
-		if(!$conn->query($sql)){
-			echo $conn->error."<br>".$sql."<br>";
-		}
-		//vergeet niet om het huidige spel uit de actieve spellen te verwijderen
-		$sql = "DELETE FROM actieve_spellen WHERE kamer_id=".$kamer_id;
-		if(!$conn->query($sql)){
-			echo $conn->error."<br>".$sql."<br>";
-		}
-		begin_spel();
+	$klaar_knop_naam = "klaar".$kamer_id;
+	if(isset($_POST[$klaar_knop_naam]) && $ingelogd){
 		$_POST = Array();
+		//voeg toe dat die speler klaar is
+		$sql = "UPDATE kamers_spelers SET klaar_voor_nieuw_potje=1 WHERE kamer_id=".$kamer_id." AND speler_id=".$ingelogde_speler;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		//kijk of iedereen klaar is
+		$sql = "SELECT kamer_id FROM kamers_spelers WHERE klaar_voor_nieuw_potje=0 AND kamer_id=".$kamer_id;
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		if(!($result->num_rows)){
+			//dan zijn we klaar voor een nieuw spel, mits er genoeg spelers zijn
+			$sql = "SELECT kamer_id FROM kamers_spelers WHERE kamer_id=".$kamer_id;
+			$result = $conn->query($sql);
+			if(!$result){
+				echo $conn->error."<br>".$sql."<br>";
+			}
+			if($result->num_rows >= 2){
+				begin_spel();
+			}
+		}
+		update($kamer_id);
+		return ververs();
+	}
+	$niet_klaar_knop_naam = "niet_klaar".$kamer_id;
+	if(isset($_POST[$niet_klaar_knop_naam]) && $ingelogd){
+		$_POST = Array();
+		//voeg toe dat die speler niet klaar is
+		$sql = "UPDATE kamers_spelers SET klaar_voor_nieuw_potje=0 WHERE kamer_id=".$kamer_id." AND speler_id=".$ingelogde_speler;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		update($kamer_id);
 		return ververs();
 	}
 	
 	//kijk of er iemand aanschuift
 	if(isset($_POST['Schuif_aan'])){
-		$log_in_informatie = bepaal_log_in_informatie();
-		$ingelogd = $log_in_informatie['ingelogd'];
 		if($ingelogd){
-			$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
 			//voeg de ingelogde speler toe aan de kamer, haal hem er eerst uit voor de zekerheid
 			$sql = "DELETE FROM kamers_spelers WHERE kamer_id=".$kamer_id." AND speler_id=".$ingelogde_speler;
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
-			$sql = "INSERT INTO kamers_spelers VALUES (".$kamer_id.",".$ingelogde_speler.")";
+			$sql = "INSERT INTO kamers_spelers VALUES (".$kamer_id.",".$ingelogde_speler.", 0)";
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
-			update();
+			update($kamer_id);
+			update(-1);
 		}
 		$_POST = Array();
 		return ververs();
 	}
 	//kijk of er iemand de tafel verlaat
 	if(isset($_POST["Ga_weg"])){
-		$log_in_informatie = bepaal_log_in_informatie();
-		$ingelogd = $log_in_informatie['ingelogd'];
 		if($ingelogd){
-			$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
 			//haal de ingelogde speler uit de kamer
 			$sql = "DELETE FROM kamers_spelers WHERE kamer_id=".$kamer_id." AND speler_id=".$ingelogde_speler."";
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
+			update($kamer_id);
+			update(-1);
 		}		
 		$_POST = Array();
 		return ververs();

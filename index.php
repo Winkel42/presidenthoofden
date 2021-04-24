@@ -27,7 +27,7 @@ function get_name_from_player($speler){
 }
 
 function teken_pagina($ingelogd, $ingelogde_speler){
-	vernieuw_functie();
+	vernieuw_functie(-1); //-1 is het kamernummer van de thuispagina
 	global $conn;
 	if($ingelogd){
 		echo "<h3>u bent ingelogd als ".get_name_from_player($ingelogde_speler)."</h3>";

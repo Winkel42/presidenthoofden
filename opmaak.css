@@ -102,3 +102,19 @@ span.tabelvakje{
 	height: 30px;
 	font-size: 19px;
 }
+
+input.delen{
+	width: 600px;
+	font-size: 20px;
+	font-weight: bold;
+}
+.groen{
+	color: green;
+}
+
+h4 {
+	display: inline;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 17px;
+}
