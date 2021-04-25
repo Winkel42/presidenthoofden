@@ -4,12 +4,8 @@ body{
 
 .kaart{
 	width: 80px;
-}
-
-.niet_geselecteerd {
 	border: 3px solid black;
 	margin: 5px;
-	
 }
 
 .geselecteerd {
@@ -17,15 +13,6 @@ body{
 	margin: 2px;
 }
 
-.onklikbaar {
-	border: 3px solid black;
-	margin: 5px;
-}
-
-.onzichtbaar {
-	border: 3px solid black;
-	margin: 5px;
-}
 
 .speler_knop{
 	display: inline;
@@ -123,4 +110,8 @@ h4 {
 
 progress{
 	color: green;
+}
+
+input.uitgezet{
+	pointer-events: none;
 }

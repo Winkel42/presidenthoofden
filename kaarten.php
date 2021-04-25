@@ -3,6 +3,7 @@
 include 'lees_en_zet_koekjes.php';
 include 'updaten.php';
 include 'vernieuwscript.php';
+include 'is_legaal.php';
 //we maken verbinding met de database
 $servername = "localhost";
 $username = "root";
@@ -17,8 +18,32 @@ if ($conn->connect_error) {
 $aantal_eigen_veranderingen = 0;
 
 function teken_algemene_dingen_voor_spel(){
-	global $kamer_id;
+	global $kamer_id, $stapel_breedte, $stapel_diepte, $stapel_waarde, $stapel_jokers;
 	vernieuw_functie($kamer_id);
+	echo "<script>
+		function klikOp(kaart_id){
+			if(kaart_id == 8){//klaver 8 kan je niet op klikken
+				return;
+			}
+			var kaartElement = document.getElementById('kaart'+kaart_id);
+			kaartElement.classList.toggle('geselecteerd');
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open('POST',
+				'geklikte_kaart.php?kaart_id='+kaart_id+'&kamer_id=".$kamer_id."&stapel_breedte=".$stapel_breedte."&stapel_diepte=".$stapel_diepte."&stapel_waarde=".$stapel_waarde."&stapel_jokers=".$stapel_jokers."'
+				, true);
+			xmlhttp.send();
+			xmlhttp.onreadystatechange = function(){
+				if(this.readyState == 4 && this.status == 200){
+					if(this.responseText == 'vernieuw'){						
+						window.location.href = window.location.href;
+					}
+					if(this.responseText == 'speel_aan'){
+						window.location.href = window.location.href;
+					}
+				}
+			}
+		}
+		</script>";
 }
 
 function teken_algemene_dingen_na_spel(){
@@ -49,7 +74,7 @@ function teken_algemene_dingen_na_spel(){
 	if(!$ingelogd){
 		$knop_naam = "";
 		$knop_tekst = "Niet ingelogd";
-		$disable = ' disabled ';
+		$disable = 'uitgezet';
 	}
 	
 	
@@ -63,7 +88,7 @@ function teken_algemene_dingen_na_spel(){
 	else{
 		echo "<form method='post'>";
 	}
-	echo "<input type='submit'; class='menu_knop' name='".$knop_naam."'; value='".$knop_tekst."'; ".$disable.">";
+	echo "<input type='submit'; class='menu_knop ".$disable."' name='".$knop_naam."'; value='".$knop_tekst."'>";
 	echo "<input type='submit' class='menu_knop' formaction='index.php'; value='Terug naar thuispagina'></form>";
 	echo "</p>";
 }
@@ -71,87 +96,6 @@ function teken_algemene_dingen_na_spel(){
 
 
 
-function is_legaal($kaarten){
-	global $stapel_diepte;
-	global $stapel_breedte;
-	global $stapel_waarde;
-	global $stapel_jokers;
-	if(!$kaarten){
-		return False;
-	}
-	if(count($kaarten)!=$stapel_breedte && $stapel_breedte!=0){
-		return False;
-	}
-	//kijk of het allemaal dezelfde kaarten en/of jokers zijn, bepaal de waarde
-	$waarde = 'joker';
-	foreach($kaarten as $kaart){
-		if($kaart->waarde != 'joker'){
-			if($kaart->waarde != $waarde && $waarde != 'joker'){
-				return False;
-			}
-			$waarde = $kaart->waarde;
-		}
-	}
-	if($stapel_diepte == 0){
-		return True;
-	}
-	if(count($kaarten) != $stapel_breedte){
-		echo "niet genoeg kaarten";
-		return False;
-	}
-	//check de regels met boeren en jokers
-	$is_er_een_joker = False;
-	foreach($kaarten as $kaart){
-		$is_er_een_joker = ($is_er_een_joker || ($kaart->waarde == 'joker'));
-	}
-	if(($stapel_jokers && $waarde == 'J') || ($stapel_waarde == 'J' && $is_er_een_joker)){
-		return True;
-	}
-	switch($stapel_waarde){
-		case 'lege tafel':
-			return True;
-			break;
-		case 'joker':
-			return ($waarde != 'joker');
-			break;
-		case '8':
-			return !in_array($waarde, Array('joker', '8'));
-			break;
-		case '4':
-			return !in_array($waarde, Array('joker', '8', '4'));
-			break;
-		case '6':
-			return !in_array($waarde, Array('joker', '8', '4', '6'));
-			break;
-		case '7':
-			return in_array($waarde, Array('3', '4', '5', '6'));
-			break;
-		case '3':
-			return !in_array($waarde, Array('joker', '8', '4', '6', '7', '3'));
-			break;
-		case '9':
-			return !in_array($waarde, Array('joker', '8', '4', '6', '7', '3', '9'));
-			break;
-		case '10':
-			return False;
-			break;
-		case 'J':
-			return in_array($waarde, Array('5', 'Q', 'K', 'A', '2'));
-			break;
-		case 'Q':
-			return in_array($waarde, Array('5', 'K', 'A', '2'));
-			break;
-		case 'K':
-			return in_array($waarde, Array('5', 'A', '2'));
-			break;
-		case 'A':
-			return in_array($waarde, Array('5', '2'));
-			break;
-		case '2':
-			return ($waarde == '5');
-			break;
-	}
-}
 
 function is_het_een_ontploffing($kaarten){
 	$aantal_jokers = 0;
@@ -199,11 +143,6 @@ function bepaal_kleur($kaart_id){
 	}
 }
 
-function bepaal_waarde($kaart_id){
-	$i = (int)$kaart_id/4;
-	$alle_kaarten = Array('joker','joker','8','4','5','6','7','3','9','9','10','J','Q','K','A','2');
-	return $alle_kaarten[$i];
-}
 
 
 class Kaart {
@@ -228,45 +167,28 @@ class Kaart {
 		if($result && $result->num_rows>0){
 			$this->geklikt = 1;
 		}
-		//kijk of de kaart net aangeklikt werd		
-		$knop_naam = "knop".$spel_id."a".$kaart_id;
-		if(isset($_POST[$knop_naam."_x"])){
-			$this->geklikt = 1 - $this->geklikt;
-			$sql = "UPDATE aangeklikte_kaarten SET aangeklikt = ".$this->geklikt."  WHERE spel_id=".$spel_id." AND kaart_id=".$kaart_id.";";
-			if(!$conn->query($sql)){
-				echo $conn->error."<br>".$sql."<br>";
-			}
-		}
-		//als het de klaver 8 is, is de kaart altijd aangeklikt
-		if($this->kleur == 'klaver' && $this->waarde == '8'){
-			$sql = "UPDATE aangeklikte_kaarten SET aangeklikt=1 WHERE spel_id=".$spel_id." AND kaart_id=".$kaart_id;
-			if(!$conn->query($sql)){
-				echo $conn->error."<br>".$sql."<br>";
-			}
-			$this->geklikt = 1;
-		}
 	}
 	function draw($klikbare_kaarten, $zichtbaar, $in_stapel){
 		if($zichtbaar){
 			if($this->waarde == "joker"){
-				$kaart_tekst = "/afbeeldingen/joker.png";
+				$kaart_tekst = "joker";
 			}
 			else{
-				$kaart_tekst = "/afbeeldingen/".$this->kleur.$this->waarde.".png";
+				$kaart_tekst = $this->kleur.$this->waarde;
 			}
 		}
 		else{
-			$kaart_tekst = "/afbeeldingen/achterkant.png";
+			$kaart_tekst = "achterkant";
 		}
 		if($klikbare_kaarten && $zichtbaar){
-			$knop_naam = "knop".$this->spel_id."a".$this->kaart_id;
+			$kaart_naam = "kaart".$this->kaart_id;
 			if($this->geklikt){
 				$klasse = "kaart geselecteerd";
 			}
 			else{
-				$klasse = "kaart niet_geselecteerd";
+				$klasse = "kaart";
 			}
-			echo "<input class='".$klasse."' type='image' name='".$knop_naam."' src='".$kaart_tekst."' alt='".$kaart_tekst."'/>";
+			echo "<input class='".$klasse."' onclick=klikOp(".$this->kaart_id.") type='image' id='".$kaart_naam."' src='/afbeeldingen/".$kaart_tekst.".png' alt='".$kaart_tekst."'/>";
 		}
 		else{
 			if($zichtbaar){
@@ -278,7 +200,7 @@ class Kaart {
 			if($in_stapel){
 				$klasse = "kaart in_stapel";
 			}
-			echo "<img class='".$klasse."' src='".$kaart_tekst."' alt='".$kaart_tekst."'/>";
+			echo "<img class='".$klasse."' src='/afbeeldingen/".$kaart_tekst.".png' alt='".$kaart_tekst."'/>";
 		}
 	}
 }
@@ -298,14 +220,8 @@ class Hand {
 	}
 	function draw($klikbare_kaarten, $ingelogd_als_speler){//weergeef alle kaarten in de hand
 		echo "<td class='hand'>";
-		if($klikbare_kaarten){
-			echo "<form class='hand' method='post'>";
-		}
 		foreach($this->kaarten as $kaart){
 			$kaart->draw($klikbare_kaarten, $ingelogd_als_speler, FALSE);
-		}
-		if($klikbare_kaarten){
-			echo "</form>";
 		}
 		echo "</td>";
 			
@@ -425,17 +341,17 @@ class Spel {
 			// 3.speler is aan de beurt, al gepast, maar er is niemand meer over.
 			// 4.speler is aan de beurt en stapel is net ontploft
 			// in alle gevallen kan het alleen als je de ingelogde speler bent.
-			$disable = ' disabled ';
+			$disable = 'uitgezet';
 			if($speler == $speler_aan_de_beurt && !$gepast && $stand == 0){
 				$disable = '';
 				$hand = $this->bepaal_hand($speler);
 				$aangeklikt = $hand->bepaal_aangeklikte_kaarten();
 				if($stapel_diepte == 0 && !is_legaal($aangeklikt)){
-					$disable = ' disabled '; //in dit geval mag je niet op Speel klikken
+					$disable = 'uitgezet'; //in dit geval mag je niet op Speel klikken
 				}
 			}			
 			if($stand > 0){
-				$disable = ' disabled ';
+				$disable = 'uitgezet';
 			}
 			if($speler == $speler_aan_de_beurt && $stapel_ontploft){
 				$disable = ' ';
@@ -444,10 +360,10 @@ class Spel {
 				$disable = ''; //dit is om de stapel weg te doen nadat degene voor je uit is gegaan
 			}
 			if($aantal_spelers_in_spel == 1){
-				$disable = ' disabled ';
+				$disable = 'uitgezet';
 			}
 			if(!$ingelogd_als_speler){
-				$disable = ' disabled ';
+				$disable = 'uitgezet';
 			}
 			//nu bepalen we de tekst die op de knop moet staan
 			if($speler == $speler_aan_de_beurt && $stapel_diepte == 0){
@@ -473,7 +389,7 @@ class Spel {
 				echo $speler_aan_de_beurt."<br>".$aantal_overgebleven_spelers."<br>".$stapel_diepte;
 			}
 			$knop_naam = "grote_knop_van_".$speler;
-			echo("<form method='post'><input class='speler_knop' type='submit' name='".$knop_naam."'; value='".$knop_tekst."'".$disable."/></form></td>");
+			echo("<form method='post'><input class='speler_knop ".$disable."' type='submit' name='".$knop_naam."'; value='".$knop_tekst."'/></form></td>");
 			//teken de hand
 			$klikbare_kaarten = ($speler == $speler_aan_de_beurt && $aantal_spelers_in_stapel > 1 && $aantal_spelers_in_spel > 1 && !$stapel_ontploft);
 			$hand->draw($klikbare_kaarten, $ingelogd_als_speler);
@@ -540,6 +456,7 @@ class Spel {
 			echo $conn->error."<br>".$sql."<br>";
 		}
 		global $kamer_id;
+		$_POST = Array();
 		update($kamer_id);
 	}
 	function volgende_aan_de_beurt(){
@@ -698,7 +615,12 @@ function begin_spel(){
 	}	
 	//creer de kaarten in de andere database
 	foreach(range(0,63) as $kaart_id){
-		$sql = "INSERT INTO aangeklikte_kaarten VALUES(".$spel_id.",".$kaart_id.",0)";
+		if($kaart_id != 8){
+			$sql = "INSERT INTO aangeklikte_kaarten VALUES(".$spel_id.",".$kaart_id.",0)";
+		}
+		else{
+			$sql = "INSERT INTO aangeklikte_kaarten VALUES(".$spel_id.",8,1)";
+		}
 		if(!$conn->query($sql)){
 			echo $conn->error."<br>".$sql;
 		}
