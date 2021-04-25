@@ -60,21 +60,27 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 			if(!$spelers){
 				echo "niemand";
 			}
-			echo "</span><span class='tabelvakje'>";
-			//nu gaan we kijken of er een spel is, en zo ja, hoe ver dat spel is
-			$sql = "SELECT kaart_id FROM actieve_spellen A, spellen_spelers_kaarten B WHERE A.spel_id=B.spel_id AND kamer_id=".$kamer_id;
-			$result = $conn->query($sql);
-			if(!$result){
-				echo $conn->error."<br>".$sql."<br>";
-			}
-			$voortgang = 100*(64-$result->num_rows)/64;
-			if($voortgang == 100){
-				echo "Geen spel aan de gang";
-			}
-			else{
-				echo "<progress value=".$voortgang." max='100'></progress>";
-			}
-			echo "</span></p>";
+			echo "</span><span id='voortgang".$kamer_id."' class='tabelvakje'></span></p>";//dat laatste vakje is voor de voortgang
+			//script voor de voortgangsbalken
+			echo "<script>
+				function bekijk_voortgang(){
+					var xmlhttp = new XMLHttpRequest();
+					xmlhttp.onreadystatechange = function() {
+						if (this.readyState == 4 && this.status == 200) {
+							var element = document.getElementById('voortgang".$kamer_id."');
+							if(this.responseText == 64){
+								element.innerHTML = 'Geen spel aan de gang';
+							}
+							else{
+								element.innerHTML = '<progress value='+this.responseText+' max=64></progress>';
+							}
+						}
+					}
+					xmlhttp.open('POST','voortgang_spellen.php?kamer_id=".$kamer_id."',true);
+					xmlhttp.send();
+				}
+				setInterval(bekijk_voortgang(), 500);
+			</script>";
 		}	
 		echo "</form>";
 	}
