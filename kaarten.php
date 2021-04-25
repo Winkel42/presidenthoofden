@@ -498,7 +498,7 @@ class Spel {
 		}
 		
 		
-		//kijk of de speler nu uit is
+		//kijk of de speler nu uit is blabl
 		$sql = "SELECT kaart_id FROM spellen_spelers_kaarten WHERE spel_id=".$this->spel_id." AND speler_id=".$speler;
 		$result = $conn->query($sql);
 		if(!$result){
