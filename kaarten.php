@@ -505,7 +505,7 @@ class Spel {
 			echo $conn->error."<br>".$sql."<br>";
 		}
 		$klaar = ($result->num_rows == 0);
-		//kijk of er net ontploft is
+		//kijk of er net ontploft is blablabla
 		$ontploft = is_het_een_ontploffing($kaarten);
 		
 		if($ontploft){
