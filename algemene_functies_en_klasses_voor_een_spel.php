@@ -306,7 +306,7 @@ class Spel {
 			$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
 		}
 		
-		echo "<table class='kaarten'>";
+		echo "<table><tr><td class='kaarten'><table class='kaarten'>";
 		foreach($this->spelers as $speler){
 			$naam = get_name_from_player($speler);
 			$hand = $this->bepaal_hand($speler);
@@ -383,18 +383,14 @@ class Spel {
 			$hand->draw($klikbare_kaarten, $ingelogd_als_speler);
 			echo "</tr>";
 		}
+		echo "</table></td>";
 		//teken de stapel
 		global $stapel_diepte;
-		echo "<tr><td><h2>Stapel</h2></td>";
+		echo "<td class='boven rechts'><h2>Stapel</h2>";
 		if($stapel_diepte>0){
 			global $conn;
 			for($diepte = 1; $diepte <= $stapel_diepte; $diepte++){
-				if($diepte > 1){
-					echo "<tr class='stapel'><td></td><td>";
-				}
-				else{
-					echo "<td>";
-				}
+				echo "<br>";
 				$sql = "SELECT kaart_id FROM spel_stapel WHERE spel_id = ".$this->spel_id." AND diepte=".$diepte;
 				$result = $conn->query($sql);
 				if($result && $result->num_rows>0){
@@ -409,10 +405,9 @@ class Spel {
 				else{
 					echo $conn->error."<br>".$sql."<br>";
 				}
-				echo "</td></tr>";
 			}
 		}
-		echo "</table>";
+		echo "</td></table>";
 		//als er nog maar 1 persoon over is, is het spel voorbij, en moet je het spel kunnen beëindigen
 		if($aantal_spelers_in_spel <= 1){			
 			global $kamer_id;
@@ -519,7 +514,6 @@ class Spel {
 					echo $conn->error."<br>".$sql."<br>";
 				}
 				update($kamer_id);
-				update(-1);
 				return;
 			}
 			
@@ -543,7 +537,6 @@ class Spel {
 			}
 		}
 		update($kamer_id);
-		update(-1);//zodat je op de thuispagina de voortgang kan zien
 	}
 	function verwijder_geklikte_kaarten($speler){
 		global $conn;
@@ -646,7 +639,6 @@ function begin_spel(){
 		echo $conn->error."<br>".$sql;
 	}
 	update($kamer_id);
-	update(-1);
 }
 	
 

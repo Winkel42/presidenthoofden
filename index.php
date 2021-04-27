@@ -32,7 +32,7 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 	if($ingelogd){
 		echo "<h3>u bent ingelogd als ".get_name_from_player($ingelogde_speler)."</h3>";
 		$knop_naam = "log_uit".$ingelogde_speler;
-		echo"<form method='post'><input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
+		echo"<form method='post' id='log_uit_knop'><input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
 		//geef links naar de kamers, en geef aan welke spelers daar zijn
 		$namen_kamers = Array("park", "13gang", "noordkantine", "tuin");
 		echo "<form class='tabelformulier'>
@@ -63,7 +63,7 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 			echo "</span><span id='voortgang".$kamer_id."' class='tabelvakje'></span></p>";//dat laatste vakje is voor de voortgang
 			//script voor de voortgangsbalken
 			echo "<script>
-				function bekijk_voortgang(){
+				function bekijkVoortgang".$kamer_id."(){
 					var xmlhttp = new XMLHttpRequest();
 					xmlhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
@@ -79,7 +79,7 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 					xmlhttp.open('POST','voortgang_spellen.php?kamer_id=".$kamer_id."',true);
 					xmlhttp.send();
 				}
-				setInterval(bekijk_voortgang(), 500);
+				setInterval(bekijkVoortgang".$kamer_id.", 500);
 			</script>";
 		}	
 		echo "</form>";

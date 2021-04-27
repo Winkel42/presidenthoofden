@@ -42,6 +42,8 @@ td.naam_en_knop{
 
 table.kaarten{
 	margin-bottom : 100px;
+	max-width: 400px;
+	width: 50% !important;
 }
 
 td{
@@ -115,4 +117,12 @@ progress{
 input.uitgezet{
 	pointer-events: none;
 	opacity: 0.5;
+}
+
+.boven{
+	vertical-align: top;
+}
+.rechts{
+	width: 300px;
+	text-align: center;
 }
