@@ -322,7 +322,8 @@ function ververs(){
 			return ververs();
 		}
 		
-		$eind_spel_knop_naam = "einde_spel".$kamer_id;
+		//kijk of het spel beëindigd wordt
+		$eind_spel_knop_naam = "einde_spel".$spel_id;
 		if(isset($_POST[$eind_spel_knop_naam])){
 			//eerst zetten we er nog even de stand van de laatste persoon bij
 			$sql = "UPDATE spellen_spelers SET stand=(
@@ -334,14 +335,9 @@ function ververs(){
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
-			//vergeet niet om het huidige spel uit de actieve spellen te verwijderen
-			$sql = "DELETE FROM actieve_spellen WHERE kamer_id=".$kamer_id;
-			if(!$conn->query($sql)){
-				echo $conn->error."<br>".$sql."<br>";
-			}
-			$_POST = Array();
-			update($kamer_id);
-			update(-1);
+			//vergeet niet om het huidige spel uit de actieve spellen en andere databases te verwijderen
+			spel_opruimen($spel_id);
+			update(-1);//we updaten expres niet in de kamer zelf zodat andere spelers nog even kunnen kijken
 			return ververs();
 		}
 	}

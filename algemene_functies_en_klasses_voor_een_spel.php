@@ -1,4 +1,5 @@
 <?php
+include 'opruimen.php';
 //we maken verbinding met de database
 $servername = "localhost";
 $username = "root";
@@ -411,7 +412,7 @@ class Spel {
 		//als er nog maar 1 persoon over is, is het spel voorbij, en moet je het spel kunnen beëindigen
 		if($aantal_spelers_in_spel <= 1){			
 			global $kamer_id;
-			$nieuw_spel_knop_naam = "einde_spel".$kamer_id;
+			$nieuw_spel_knop_naam = "einde_spel".$this->spel_id;
 			echo "<form method='post'><input class='delen' style='width:400px'; type='submit' name='".$nieuw_spel_knop_naam."'; value='Beëindig het spel'/></form>";
 		}
 		//kijk welke spelers er te wachten staan

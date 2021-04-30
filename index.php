@@ -2,6 +2,7 @@
 include 'lees_en_zet_koekjes.php';
 include 'updaten.php';
 include 'vernieuwscript.php';
+include 'opruimen.php';
 $servername = "localhost";
 $username = "root";
 $dbname = "spellen";
@@ -243,6 +244,8 @@ function ververs(){
 	teken_pagina($ingelogd, $ingelogde_speler);
 }
 
+
+ruim_oude_spellen_op();
 ververs();
 
 ?>
