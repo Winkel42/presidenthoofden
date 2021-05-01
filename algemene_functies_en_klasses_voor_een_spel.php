@@ -220,9 +220,10 @@ class Hand {
 		$this->sorteer();
 	}
 	function draw($klikbare_kaarten, $ingelogd_als_speler){//weergeef alle kaarten in de hand
+		global $aantal_spelers_in_spel;
 		echo "<td class='hand'>";
 		foreach($this->kaarten as $kaart){
-			$kaart->draw($klikbare_kaarten, $ingelogd_als_speler, FALSE);
+			$kaart->draw($klikbare_kaarten, $ingelogd_als_speler || $aantal_spelers_in_spel <= 1, FALSE);
 		}
 		echo "</td>";
 			
