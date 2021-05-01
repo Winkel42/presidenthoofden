@@ -11,6 +11,40 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
+function teken_script_kaart_klik($kamer_id, $ingelogde_speler){
+	global $doorgeef_fase;
+	echo "<script>
+		function klikOp(kaart_id){";
+	if(!$doorgeef_fase){
+		echo "if(kaart_id == 8){//klaver 8 kan je niet op klikken
+				return;
+			}";
+	}
+	echo "
+			var kaartElement = document.getElementById('kaart'+kaart_id);
+			kaartElement.classList.toggle('geselecteerd');
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open('POST',
+				'geklikte_kaart.php?kaart_id='+kaart_id+'&kamer_id=".$kamer_id."'
+				, true);
+			xmlhttp.send();
+			xmlhttp.onreadystatechange = function(){
+				if(this.readyState == 4 && this.status == 200){
+					if(this.responseText == 'vernieuw'){						
+						window.location.href = window.location.href;
+					}
+					if(this.responseText == 'speel_aan'){
+						document.getElementById('speler".$ingelogde_speler."').classList.remove('uitgezet');
+					}
+					if(this.responseText == 'speel_uit'){
+						document.getElementById('speler".$ingelogde_speler."').classList.add('uitgezet');
+					}
+				}
+			}
+		}
+		</script>";
+}	
+			
 function is_legaal($kaarten){
 	global $stapel_diepte;
 	global $stapel_breedte;
@@ -92,6 +126,27 @@ function is_legaal($kaarten){
 			break;
 	}
 }
+
+function is_doorgeef_legaal($hand_kaarten, $aangeklikte_kaarten, $doorgeef_stand){
+	if($doorgeef_stand > 0){
+		return (count($aangeklikte_kaarten) == $doorgeef_stand);
+	}
+	else{
+		if(count($aangeklikte_kaarten) != -$doorgeef_stand){
+			return False;
+		}
+		foreach($aangeklikte_kaarten as $kaart_hoog){
+			foreach($hand_kaarten as $kaart_laag){
+				if(!in_array($kaart_laag, $aangeklikte_kaarten) && vergelijk_laag_hoog($kaart_hoog, $kaart_laag) < 0){
+					return False;
+				}
+			}
+		}
+		return True;
+	}
+}
+
+
 
 function is_het_een_ontploffing($kaarten){
 	$aantal_jokers = 0;
@@ -272,6 +327,9 @@ class Hand {
 }
 
 function vergelijk_laag_hoog($kaart_1, $kaart_2){
+	if($kaart_1->waarde == $kaart_2->waarde){
+		return 0;
+	}
 	return $kaart_1->kaart_id - $kaart_2->kaart_id;
 }
 
@@ -301,7 +359,7 @@ class Spel {
 	}
 	function teken(){
 		teken_algemene_dingen_voor_spel();
-		global $speler_aan_de_beurt, $stapel_diepte, $aantal_spelers_in_stapel, $gepaste_spelers, $aantal_spelers_in_spel, $standen, $stapel_ontploft, $aanwezige_spelers;
+		global $speler_aan_de_beurt, $stapel_diepte, $aantal_spelers_in_stapel, $gepaste_spelers, $aantal_spelers_in_spel, $standen, $stapel_ontploft, $aanwezige_spelers, $doorgeef_fase, $doorgeef_standen;
 		$log_in_informatie = bepaal_log_in_informatie();
 		$ingelogd = $log_in_informatie['ingelogd'];
 		if($ingelogd){
@@ -316,7 +374,10 @@ class Spel {
 			$gepast = $gepaste_spelers[$speler];
 			$stand = $standen[$speler];
 			echo "<tr class='speler'><td class='naam_en_knop'>";
-			if($speler == $speler_aan_de_beurt){
+			if($doorgeef_fase){
+				$klasse = "<h2>";
+			}
+			elseif($speler == $speler_aan_de_beurt){
 				$klasse = '<h2 class="aan_de_beurt">';
 			}
 			elseif($stand){
@@ -336,6 +397,7 @@ class Spel {
 			// 2.speler is aan de beurt, niet uit, stapel is leeg en de speler heeft een legale variatie aan kaarten aangeklikt.
 			// 3.speler is aan de beurt, al gepast, maar er is niemand meer over.
 			// 4.speler is aan de beurt en stapel is net ontploft
+			// 5.speler is aan de beurt, doorgeeffase staat aan en speler moet doorgeven
 			// in alle gevallen kan het alleen als je de ingelogde speler bent.
 			$disable = 'uitgezet';
 			if($speler == $speler_aan_de_beurt && !$gepast && $stand == 0){
@@ -357,6 +419,9 @@ class Spel {
 			}
 			if($aantal_spelers_in_spel == 1){
 				$disable = 'uitgezet';
+			}
+			if($doorgeef_fase && $doorgeef_standen[$speler]){
+				$disable = ' ';
 			}
 			if(!$ingelogd_als_speler){
 				$disable = 'uitgezet';
@@ -385,10 +450,20 @@ class Spel {
 				$knop_tekst = "hier klopt iets niet";
 				echo $speler_aan_de_beurt."<br>".$aantal_overgebleven_spelers."<br>".$stapel_diepte;
 			}
+			if($doorgeef_fase){
+				$doorgeef_stand = $doorgeef_standen[$speler];
+				if($doorgeef_stand == 0){
+					$knop_tekst = "Wacht op doorgeven";
+				}
+				else{
+					$knop_tekst = "Geef door";
+				}
+			}			
+			
 			$knop_naam = "grote_knop_van_".$speler;
 			echo("<form method='post'><input id='speler".$speler."' class='speler_knop ".$disable."' type='submit' name='".$knop_naam."'; value='".$knop_tekst."'/></form></td>");
 			//teken de hand
-			$klikbare_kaarten = ($speler == $speler_aan_de_beurt && $aantal_spelers_in_stapel > 1 && $aantal_spelers_in_spel > 1 && !$stapel_ontploft);
+			$klikbare_kaarten = ($speler == $speler_aan_de_beurt && $aantal_spelers_in_stapel > 1 && $aantal_spelers_in_spel > 1 && !$stapel_ontploft) || ($doorgeef_fase && $doorgeef_stand);
 			$hand->draw($klikbare_kaarten, $ingelogd_als_speler);
 			echo "</tr>";
 		}
@@ -555,6 +630,8 @@ class Spel {
 			echo $conn->error."<br>".$sql."<br>";
 		}
 	}
+	
+	function geef_door($
 }
 	
 
@@ -648,6 +725,74 @@ function begin_spel(){
 		echo $conn->error."<br>".$sql;
 	}
 	update($kamer_id);
+	
+	//kijk of er doorgegeven moet worden
+	$sql = "SELECT spel_id FROM spellen_archief WHERE kamer_id=".$kamer_id." AND TIMESTAMPDIFF(minute, eindtijd, current_TIMESTAMP)<30 ORDER BY eindtijd DESC;";
+	echo $sql;
+	$result = $conn->query($sql);
+	if(!$result){
+		echo $conn->error."<br>".$sql;
+	}
+	if($result->num_rows >= 1){
+		echo "HOI";
+		//we moeten gaan doorgeven
+		$row = $result->fetch_assoc();
+		$vorig_spel = $row['spel_id'];
+		//haal de spelers en standen uit de andere tabel
+		$sql = "SELECT speler_id, stand FROM spellen_spelers WHERE spel_id=".$vorig_spel;
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql;
+		}
+		$vorige_standen = Array();
+		while($row = $result->fetch_assoc()){
+			$vorige_standen[$row['speler_id']] = $row['stand'];
+		}
+		asort($vorige_standen);//gesorteerd van eerst uit naar laatst uit
+		//nu kijken we welke spelers in allebei de spellen zitten, in de goede volgorde
+		$overeenkomst = Array();
+		foreach($vorige_standen as $speler => $stand){
+			if(in_array($speler, $spelers)){
+				$overeenkomst[] = $speler;
+			}
+		}
+		print_r($vorige_standen);
+		print_r($overeenkomst);
+		//vervolgens kijken we hoeveel doorgegeven moet worden
+		$n = count($overeenkomst);
+		$doorgeven = Array();
+		switch($n){
+			case 1:
+				break;
+			case 2:
+				$doorgeven[$overeenkomst[0]] = 2;
+				$doorgeven[$overeenkomst[1]] = -2;
+				break;
+			case 3:
+				$doorgeven[$overeenkomst[0]] = 2;
+				$doorgeven[$overeenkomst[2]] = -2;
+				break;
+			default:
+				$doorgeven[$overeenkomst[0]] = 2;
+				$doorgeven[$overeenkomst[1]] = 1;
+				$doorgeven[$overeenkomst[n-2]] = -1;
+				$doorgeven[$overeenkomst[n-1]] = -2;
+				break;
+		}
+		print_r($doorgeven);
+		//zet het in de database
+		foreach($doorgeven as $speler => $nummer){
+			$sql = "INSERT INTO doorgeef_informatie VALUES (".$spel_id.",".$speler.",".$nummer.")";
+			if(!$conn->query($sql)){
+				echo $conn->error."<br>".$sql;
+			}
+		}
+		//de klaver 8 is niet aangeklikt (en geen enkele kaart)
+		$conn->query("UPDATE aangeklikte_kaarten SET aangeklikt = 0 WHERE spel_id=".$spel_id);
+	}
+		
+	
+	
 }
 	
 
@@ -676,7 +821,7 @@ function maak_spel_vanuit_database($spel_id){
 
 function bepaal_globale_variabelen($spel){
 	$spel_id = $spel->spel_id;
-	global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen, $stapel_ontploft, $kamer_id;
+	global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen, $stapel_ontploft, $kamer_id, $doorgeef_fase, $doorgeef_standen;
 	//wie is er aan de beurt
 	$sql = "SELECT speler_id FROM spellen_beurt WHERE spel_id=".$spel_id;
 	$result = $conn->query($sql);
@@ -808,7 +953,26 @@ function bepaal_globale_variabelen($spel){
 	if($stapel_breedte-$aantal_jokers >= 4){
 		$stapel_ontploft = True;
 	}
-		
+	
+	
+	//kijk of het spel in de doorgeeffase zit
+	$sql = "SELECT speler_id, doorgeef_nummer FROM doorgeef_informatie WHERE spel_id=".$spel_id;
+	$result = $conn->query($sql);
+	if(!$result){
+		echo $conn->error."<br>".$sql."<br>";
+	}
+	$doorgeef_fase = ($result->num_rows > 0);
+	$doorgeef_standen = Array();
+	if($doorgeef_fase){
+		while($row = $result->fetch_assoc()){
+			$doorgeef_standen[$row['speler_id']] = $row['doorgeef_nummer'];
+		}
+	}
+	foreach($spel->spelers as $speler){
+		if(!isset($doorgeef_standen[$speler])){
+			$doorgeef_standen[$speler] = 0;
+		}
+	}
 }
 
 ?>

@@ -24,34 +24,7 @@ function teken_algemene_dingen_voor_spel(){
 	vernieuw_functie($kamer_id);
 	if($ingelogd){
 		$ingelogde_speler = $log_in_informatie['ingelogde_speler'];
-	
-		echo "<script>
-			function klikOp(kaart_id){
-				if(kaart_id == 8){//klaver 8 kan je niet op klikken
-					return;
-				}
-				var kaartElement = document.getElementById('kaart'+kaart_id);
-				kaartElement.classList.toggle('geselecteerd');
-				var xmlhttp = new XMLHttpRequest();
-				xmlhttp.open('POST',
-					'geklikte_kaart.php?kaart_id='+kaart_id+'&kamer_id=".$kamer_id."'
-					, true);
-				xmlhttp.send();
-				xmlhttp.onreadystatechange = function(){
-					if(this.readyState == 4 && this.status == 200){
-						if(this.responseText == 'vernieuw'){						
-							window.location.href = window.location.href;
-						}
-						if(this.responseText == 'speel_aan'){
-							document.getElementById('speler".$ingelogde_speler."').classList.remove('uitgezet');
-						}
-						if(this.responseText == 'speel_uit'){
-							document.getElementById('speler".$ingelogde_speler."').classList.add('uitgezet');
-						}
-					}
-				}
-			}
-			</script>";
+		teken_script_kaart_klik($kamer_id, $ingelogde_speler);
 	}
 }
 
@@ -221,15 +194,15 @@ function ververs(){
 		$spel = maak_spel_vanuit_database($spel_id);
 				
 		//bepaal een aantal globale variabelen die de stand van het spel aangeven
-		global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen;
+		global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen, $doorgeef_fase, $doorgeef_standen;
 		bepaal_globale_variabelen($spel);	
 		
 		//test:
 		//echo "de diepte is ".$stapel_diepte.", de breedte is ".$stapel_breedte.", de waarde is ".$stapel_waarde." en er zijn jokers: ".($stapel_jokers?"ja":"nee")."<br> er zijn ".$aantal_spelers_in_spel." spelers over<br>";
 		
-		//iedereen die niet aan de beurt is heeft geen kaarten meer aangeklikt
+		//iedereen die niet aan de beurt is heeft geen kaarten meer aangeklikt tenzij doorgeeffase
 		foreach($spel->spelers as $speler){
-			if($speler != $speler_aan_de_beurt){
+			if(!$doorgeef_fase && $speler != $speler_aan_de_beurt){
 				$spel->verwijder_geklikte_kaarten($speler);
 			}
 		}	
@@ -291,11 +264,52 @@ function ververs(){
 					//de speler heeft de stapel weggelegd
 					$spel->nieuwe_stapel($speler_aan_de_beurt);
 					break;
-			}
+				default:
+					//enige mogelijkheid is voor doorgeven maar dat komt later
+				
+			}		
 			$_POST = Array();
 			return ververs();
 		}
-			
+		//kijk of iemand doorgeeft
+		if($doorgeef_fase){
+			foreach($spel->spelers as $speler){
+				$knop_naam = "grote_knop_van_".$speler;
+				if(isset($_POST[$knop_naam]) && $_POST[$knop_naam] == "Geef door"){
+					//de persoon probeert kaarten door te geven, we moeten kijken of het valide is
+					$hand = $spel->bepaal_hand($speler);
+					$aangeklikte_kaarten = $hand->bepaal_aangeklikte_kaarten();
+					$doorgeef_stand = $doorgeef_standen[$speler];
+					$legale_doorgeef = is_doorgeef_legaal($hand->kaarten, $aangeklikte_kaarten, $doorgeef_stand);
+					if($legale_doorgeef){
+						foreach($aangeklikte_kaarten as $kaart){
+							$sql = "INSERT INTO doorgegeven_kaarten VALUES (".$spel_id.",".$speler.",".$kaart->kaart_id.")";
+							if(!$conn->query($sql)){
+								echo $conn->error."<br>".$sql."<br>";
+							}
+							$sql = "DELETE FROM spellen_spelers_kaarten WHERE spel_id=".$spel_id." AND speler_id=".$speler." AND kaart_id=".$kaart_id;
+							if(!$conn->query($sql)){
+								echo $conn->error."<br>".$sql."<br>";
+							}
+						}
+						//kijk of iedereen heeft doorgegeven
+						$sql = "SELECT speler_id FROM doorgeef_informatie WHERE spel_id=".$spel_id." AND speler_id NOT IN (SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$spel_id.")";
+						$result = $conn->query($sql);
+						if(!$result){
+							echo $conn->error."<br>".$sql."<br>";
+						}
+						if(!($result->num_rows)){
+							$spel->geef_door();
+						}
+					}
+					else{
+						echo "<script>alert('Geef goeie shit door');</script>";
+					}
+					$_POST = Array();
+					return ververs();
+				}
+			}
+		}
 		//we kijken, of iemand kaarten aangeklikt heeft, die gespeeld kunnen worden
 		$hand = $spel->bepaal_hand($speler_aan_de_beurt);
 		$kaarten = $hand->bepaal_aangeklikte_kaarten();
@@ -336,7 +350,7 @@ function ververs(){
 				echo $conn->error."<br>".$sql."<br>";
 			}
 			//vergeet niet om het huidige spel uit de actieve spellen en andere databases te verwijderen
-			spel_opruimen($spel_id);
+			spel_opruimen($kamer_id, $spel_id);
 			update(-1);//we updaten expres niet in de kamer zelf zodat andere spelers nog even kunnen kijken
 			return ververs();
 		}

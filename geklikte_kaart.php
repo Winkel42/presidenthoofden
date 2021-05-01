@@ -1,7 +1,13 @@
 <?php
 include 'algemene_functies_en_klasses_voor_een_spel.php';
 $kaart_id = $_GET['kaart_id'];
+if(!in_array($kaart_id,range(0,63))){
+	$kaart_id = -1;
+}
 $kamer_id = $_GET['kamer_id'];
+if($kamer_id != 0 && $kamer_id != 1 && $kamer_id != 2 && $kamer_id != 3){
+	$kamer_id = -2;
+}
 $servername = "localhost";
 $username = "root";
 $dbname = "spellen";
@@ -12,9 +18,6 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 //bepaal het spel_id
-if($kamer_id != 0 && $kamer_id != 1 && $kamer_id != 2 && $kamer_id != 3){
-	$kamer_id = -2;
-}
 $sql = "SELECT spel_id FROM actieve_spellen WHERE kamer_id=".$kamer_id;
 $result = $conn->query($sql);
 while($row = $result->fetch_assoc()){
@@ -43,19 +46,23 @@ $conn->query($sql);
 $hand = $spel->bepaal_hand($speler);
 $kaarten = $hand->bepaal_aangeklikte_kaarten();
 bepaal_globale_variabelen($spel);
-if($stapel_diepte == 0){
-	//de persoon kan spelen of niet spelen
-	if(is_legaal($kaarten)){
-		echo "speel_aan";
-	}
-	else{
-		echo "speel_uit";
-	}
+if($doorgeef_fase){
 }
 else{
-	//de persoon speelt of speelt niet
-	if(is_legaal($kaarten)){
-		echo "vernieuw";
+	if($stapel_diepte == 0){
+		//de persoon kan spelen of niet spelen
+		if(is_legaal($kaarten)){
+			echo "speel_aan";
+		}
+		else{
+			echo "speel_uit";
+		}
+	}
+	else{
+		//de persoon speelt of speelt niet
+		if(is_legaal($kaarten)){
+			echo "vernieuw";
+		}
 	}
 }
 ?>
