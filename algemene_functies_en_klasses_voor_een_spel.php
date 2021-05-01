@@ -312,17 +312,23 @@ class Spel {
 			$naam = get_name_from_player($speler);
 			$hand = $this->bepaal_hand($speler);
 			$ingelogd_als_speler = ($ingelogd && $ingelogde_speler == $speler);
+			$gepast = $gepaste_spelers[$speler];
+			$stand = $standen[$speler];
 			echo "<tr class='speler'><td class='naam_en_knop'>";
 			if($speler == $speler_aan_de_beurt){
 				$klasse = '<h2 class="aan_de_beurt">';
+			}
+			elseif($stand){
+				$klasse = "<h2 class='klaar'>";
+			}
+			elseif($gepast){
+				$klasse = "<h2 class='gepast'>";
 			}
 			else{
 				$klasse = "<h2>";
 			}
 			echo $klasse.$naam."</h2>";		
 			//creeer de grote knop
-			$stand = $standen[$speler];
-			$gepast = $gepaste_spelers[$speler];
 			//eerst kijken we of de knop aan moet staan
 			// gevallen waarin de knop aan moet staan:
 			// 1.speler is aan de beurt, niet gepast of al uit en de stapel is niet leeg. Ofwel passend, ofwel om de stapel weg te halen.
@@ -369,6 +375,7 @@ class Spel {
 			}
 			if($stand > 0){
 				$knop_tekst = $stand;
+				$disable = 'uitgezet groot';
 			}
 			if($speler == $speler_aan_de_beurt && $stapel_ontploft){
 				$knop_tekst = "Stapel weg";

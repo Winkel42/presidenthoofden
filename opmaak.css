@@ -27,6 +27,12 @@ h2{
 h2.aan_de_beurt{
 	color: green;
 }
+h2.klaar{
+	color: gold;
+}
+h2.gepast{
+	color: red;
+}
 
 .hand{
 }
@@ -116,7 +122,7 @@ progress{
 
 input.uitgezet{
 	pointer-events: none;
-	opacity: 0.5;
+	opacity: 0.7;
 }
 
 .boven{
@@ -125,4 +131,8 @@ input.uitgezet{
 .rechts{
 	width: 300px;
 	text-align: center;
+}
+
+.groot{
+	font-size: 30px;
 }
