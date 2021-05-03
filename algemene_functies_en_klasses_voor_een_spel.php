@@ -225,6 +225,7 @@ class Kaart {
 		}
 	}
 	function draw($klikbare_kaarten, $zichtbaar, $in_stapel){
+		global $conn;
 		if($zichtbaar){
 			if($this->waarde == "joker"){
 				$kaart_tekst = "joker";
@@ -235,32 +236,43 @@ class Kaart {
 		}
 		else{
 			$kaart_tekst = "achterkant";
+		}		
+		//kijk of de kaart in de doorgeeftabel staat
+		$sql = "SELECT kaart_id FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND kaart_id=".$this->kaart_id;
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		if($result->num_rows && $zichtbaar){
+			$klasse = "gouden_rand ";
+		}
+		else{
+			$klasse = "";
 		}
 		if($klikbare_kaarten && $zichtbaar){
 			$kaart_naam = "kaart".$this->kaart_id;
 			if($this->geklikt){
-				$klasse = "kaart geselecteerd";
+				$klasse = $klasse."kaart geselecteerd";
 			}
 			else{
-				$klasse = "kaart";
+				$klasse = $klasse."kaart";
 			}
 			echo "<input class='".$klasse."' onclick=klikOp(".$this->kaart_id.") type='image' id='".$kaart_naam."' src='/afbeeldingen/".$kaart_tekst.".png' alt='".$kaart_tekst."'/>";
 		}
 		else{
 			if($zichtbaar){
-				$klasse = "kaart onklikbaar";
+				$klasse = $klasse."kaart onklikbaar";
 			}
 			else{
-				$klasse = "kaart onzichtbaar";
+				$klasse = $klasse."kaart onzichtbaar";
 			}
 			if($in_stapel){
-				$klasse = "kaart in_stapel";
+				$klasse = $klasse."kaart in_stapel";
 			}
 			echo "<img class='".$klasse."' src='/afbeeldingen/".$kaart_tekst.".png' alt='".$kaart_tekst."'/>";
 		}
 	}
 }
-
 
 //een hand is wat één speler in één spel vastheeft
 class Hand {
@@ -457,6 +469,16 @@ class Spel {
 				}
 				else{
 					$knop_tekst = "Geef door";
+					//kijk of de speler al heeft doorgegeven
+					global $conn;
+					$sql = "SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND speler_id=".$speler;
+					$result = $conn->query($sql);
+					if(!$result){
+						echo $conn->error."<br>".$sql."<br>";
+					}
+					if($result->num_rows){
+						$disable = 'uitgezet';
+					}
 				}
 			}			
 			
@@ -524,7 +546,7 @@ class Spel {
 		}
 		global $kamer_id;
 		$_POST = Array();
-		update($kamer_id);
+		//update($kamer_id); eigenlijk niet
 	}
 	function volgende_aan_de_beurt(){
 		global $conn;
@@ -620,7 +642,7 @@ class Spel {
 				echo $conn->error."<br>".$sql."<br>";
 			}
 		}
-		update($kamer_id);
+		$this->verwijder_doorgegeven_kaarten($speler);
 	}
 	function verwijder_geklikte_kaarten($speler){
 		global $conn;
@@ -631,7 +653,63 @@ class Spel {
 		}
 	}
 	
-	function geef_door($
+	function geef_door(){
+		global $conn, $doorgeef_fase, $doorgeef_standen;
+		if(!$doorgeef_fase){
+			return False;
+		}
+		//geef de kaarten in de hand
+		foreach($doorgeef_standen as $speler=>$doorgeef_stand){
+			if($doorgeef_stand){
+				$sql = "INSERT INTO spellen_spelers_kaarten
+						SELECT spel_id, ".$speler.", kaart_id FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND speler_id=(
+							SELECT speler_id FROM doorgeef_informatie WHERE spel_id=".$this->spel_id." AND doorgeef_nummer=-".$doorgeef_stand."
+						)
+						";
+				if(!$conn->query($sql)){
+					echo $conn->error."<br>".$sql."<br>";
+				}
+			}
+		}
+		//haal het uit de doorgeefinformatie
+		foreach($doorgeef_standen as $speler=>$doorgeef_stand){
+			if($doorgeef_stand){
+				$sql = "DELETE FROM doorgeef_informatie WHERE spel_id=".$this->spel_id." AND speler_id=".$speler;
+				if(!$conn->query($sql)){
+					echo $conn->error."<br>".$sql."<br>";
+				}
+			}
+		}
+		//zorg dat de persoon met de klaver 8 aan de beurt is
+		$sql = "UPDATE spellen_beurt SET speler_id=(
+					SELECT speler_id FROM spellen_spelers_kaarten WHERE spel_id=".$this->spel_id." AND kaart_id=8
+				)
+				WHERE spel_id=".$this->spel_id;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		//zorg dat de klaver 8 ook aangeklikt is, en verder niks
+		$sql = "UPDATE aangeklikte_kaarten SET aangeklikt=0 WHERE spel_id=".$this->spel_id;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		$sql = "UPDATE aangeklikte_kaarten SET aangeklikt=1 WHERE spel_id=".$this->spel_id." AND kaart_id=8";
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		global $kamer_id;
+		update($kamer_id);
+	}
+	
+	function verwijder_doorgegeven_kaarten($speler){
+		global $conn;
+		$sql = "DELETE FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND kaart_id IN (
+					SELECT kaart_id FROM spellen_spelers_kaarten WHERE spel_id=".$this->spel_id." AND speler_id=".$speler."
+				)";
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+	}
 }
 	
 
@@ -724,17 +802,14 @@ function begin_spel(){
 	if(!$conn->query($sql)){
 		echo $conn->error."<br>".$sql;
 	}
-	update($kamer_id);
 	
 	//kijk of er doorgegeven moet worden
 	$sql = "SELECT spel_id FROM spellen_archief WHERE kamer_id=".$kamer_id." AND TIMESTAMPDIFF(minute, eindtijd, current_TIMESTAMP)<30 ORDER BY eindtijd DESC;";
-	echo $sql;
 	$result = $conn->query($sql);
 	if(!$result){
 		echo $conn->error."<br>".$sql;
 	}
 	if($result->num_rows >= 1){
-		echo "HOI";
 		//we moeten gaan doorgeven
 		$row = $result->fetch_assoc();
 		$vorig_spel = $row['spel_id'];
@@ -756,8 +831,6 @@ function begin_spel(){
 				$overeenkomst[] = $speler;
 			}
 		}
-		print_r($vorige_standen);
-		print_r($overeenkomst);
 		//vervolgens kijken we hoeveel doorgegeven moet worden
 		$n = count($overeenkomst);
 		$doorgeven = Array();
@@ -775,11 +848,10 @@ function begin_spel(){
 			default:
 				$doorgeven[$overeenkomst[0]] = 2;
 				$doorgeven[$overeenkomst[1]] = 1;
-				$doorgeven[$overeenkomst[n-2]] = -1;
-				$doorgeven[$overeenkomst[n-1]] = -2;
+				$doorgeven[$overeenkomst[$n-2]] = -1;
+				$doorgeven[$overeenkomst[$n-1]] = -2;
 				break;
 		}
-		print_r($doorgeven);
 		//zet het in de database
 		foreach($doorgeven as $speler => $nummer){
 			$sql = "INSERT INTO doorgeef_informatie VALUES (".$spel_id.",".$speler.",".$nummer.")";
@@ -791,7 +863,7 @@ function begin_spel(){
 		$conn->query("UPDATE aangeklikte_kaarten SET aangeklikt = 0 WHERE spel_id=".$spel_id);
 	}
 		
-	
+	update($kamer_id);
 	
 }
 	

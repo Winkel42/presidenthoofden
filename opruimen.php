@@ -9,6 +9,8 @@ function spel_opruimen($kamer_id, $spel_id){
 	$conn->query("DELETE FROM spel_stapel WHERE spel_id=".$spel_id);
 	$conn->query("DELETE FROM spellen_spelers_kaarten WHERE spel_id=".$spel_id);
 	$conn->query("DELETE FROM aangeklikte_kaarten WHERE spel_id=".$spel_id);
+	$conn->query("DELETE FROM doorgegeven_kaarten WHERE spel_id=".$spel_id);
+	$conn->query("DELETE FROM doorgeef_informatie WHERE spel_id=".$spel_id);
 	//alleen spellen_spelers moet blijven want daar staat de stand in
 }
 

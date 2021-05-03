@@ -209,7 +209,7 @@ function ververs(){
 		
 		//nu moeten we nog kijken, of er iets moet gebeuren, omdat iemand op een knop gedrukt heeft
 		$knop_naam = "grote_knop_van_".$speler_aan_de_beurt;
-		if(isset($_POST[$knop_naam])){
+		if(isset($_POST[$knop_naam]) && $_POST[$knop_naam] != "Geef door"){
 			switch($_POST[$knop_naam]){
 				case "Speel":
 					//de speler heeft gespeeld
@@ -230,12 +230,12 @@ function ververs(){
 					if(!$conn->query($sql)){
 						echo $conn->error."<br>".$sql."<br>";
 					}
-					update($kamer_id);
 					//in de database zetten dat de speler gepast heeft
 					$sql = "UPDATE spellen_spelers SET gepast = 1 WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
 					if(!$conn->query($sql)){
 						echo $conn->error."<br>".$sql."<br>";
 					}
+					$spel->verwijder_doorgegeven_kaarten($speler_aan_de_beurt);
 					update($kamer_id);
 					break;
 				case "Stapel weg":				
@@ -252,12 +252,11 @@ function ververs(){
 						if(!$conn->query($sql)){
 							echo $conn->error."<br>".$sql."<br>";
 						}
-						update($kamer_id);
 						$sql = "UPDATE spellen_spelers SET stand = ".count($spel->spelers)." WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
 						if(!$conn->query($sql)){
 							echo $conn->error."<br>".$sql."<br>";
 						}
-						update($kamer_id);
+						//niet updaten zodat mensen het nog kunnen zien
 						//dan moet ook alvast de volgende aan beurt
 						$spel->volgende_aan_de_beurt();
 					}			
@@ -276,37 +275,45 @@ function ververs(){
 			foreach($spel->spelers as $speler){
 				$knop_naam = "grote_knop_van_".$speler;
 				if(isset($_POST[$knop_naam]) && $_POST[$knop_naam] == "Geef door"){
-					//de persoon probeert kaarten door te geven, we moeten kijken of het valide is
-					$hand = $spel->bepaal_hand($speler);
-					$aangeklikte_kaarten = $hand->bepaal_aangeklikte_kaarten();
-					$doorgeef_stand = $doorgeef_standen[$speler];
-					$legale_doorgeef = is_doorgeef_legaal($hand->kaarten, $aangeklikte_kaarten, $doorgeef_stand);
-					if($legale_doorgeef){
-						foreach($aangeklikte_kaarten as $kaart){
-							$sql = "INSERT INTO doorgegeven_kaarten VALUES (".$spel_id.",".$speler.",".$kaart->kaart_id.")";
-							if(!$conn->query($sql)){
+					//kijk of de speler al heeft doorgegeven
+					$sql = "SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$spel_id." AND speler_id=".$speler;
+					$result = $conn->query($sql);
+					if(!$result){
+						echo $conn->error."<br>".$sql."<br>";
+					}
+					if(!($result->num_rows)){
+						//de persoon probeert kaarten door te geven, we moeten kijken of het valide is
+						$hand = $spel->bepaal_hand($speler);
+						$aangeklikte_kaarten = $hand->bepaal_aangeklikte_kaarten();
+						$doorgeef_stand = $doorgeef_standen[$speler];
+						$legale_doorgeef = is_doorgeef_legaal($hand->kaarten, $aangeklikte_kaarten, $doorgeef_stand);
+						if($legale_doorgeef){
+							foreach($aangeklikte_kaarten as $kaart){
+								$sql = "INSERT INTO doorgegeven_kaarten VALUES (".$spel_id.",".$speler.",".$kaart->kaart_id.")";
+								if(!$conn->query($sql)){
+									echo $conn->error."<br>".$sql."<br>";
+								}
+								$sql = "DELETE FROM spellen_spelers_kaarten WHERE spel_id=".$spel_id." AND speler_id=".$speler." AND kaart_id=".$kaart->kaart_id;
+								if(!$conn->query($sql)){
+									echo $conn->error."<br>".$sql."<br>";
+								}
+							}
+							//kijk of iedereen heeft doorgegeven
+							$sql = "SELECT speler_id FROM doorgeef_informatie WHERE spel_id=".$spel_id." AND speler_id NOT IN (SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$spel_id.")";
+							$result = $conn->query($sql);
+							if(!$result){
 								echo $conn->error."<br>".$sql."<br>";
 							}
-							$sql = "DELETE FROM spellen_spelers_kaarten WHERE spel_id=".$spel_id." AND speler_id=".$speler." AND kaart_id=".$kaart_id;
-							if(!$conn->query($sql)){
-								echo $conn->error."<br>".$sql."<br>";
+							if(!($result->num_rows)){
+								$spel->geef_door();
 							}
 						}
-						//kijk of iedereen heeft doorgegeven
-						$sql = "SELECT speler_id FROM doorgeef_informatie WHERE spel_id=".$spel_id." AND speler_id NOT IN (SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$spel_id.")";
-						$result = $conn->query($sql);
-						if(!$result){
-							echo $conn->error."<br>".$sql."<br>";
+						else{
+							echo "<script>alert('Geef goeie shit door');</script>";
 						}
-						if(!($result->num_rows)){
-							$spel->geef_door();
-						}
+						$_POST = Array();
+						return ververs();
 					}
-					else{
-						echo "<script>alert('Geef goeie shit door');</script>";
-					}
-					$_POST = Array();
-					return ververs();
 				}
 			}
 		}
