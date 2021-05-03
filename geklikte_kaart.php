@@ -5,7 +5,7 @@ if(!in_array($kaart_id,range(0,63))){
 	$kaart_id = -1;
 }
 $kamer_id = $_GET['kamer_id'];
-if($kamer_id != 0 && $kamer_id != 1 && $kamer_id != 2 && $kamer_id != 3){
+if($kamer_id != 0 && $kamer_id != 1 && $kamer_id != 2 && $kamer_id != 3 && $kamer_id != 4){
 	$kamer_id = -2;
 }
 $servername = "localhost";

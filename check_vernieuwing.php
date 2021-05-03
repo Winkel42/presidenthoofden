@@ -5,7 +5,7 @@ $dbname = "spellen";
 $password = "";
 $conn = new mysqli($servername, $username, $password, $dbname);
 $kamer_id = $_REQUEST['kamer_id'];
-if(!array_search($kamer_id, Array(-1,0,1,2,3))){//kamer -1 is de thuispagina
+if(!array_search($kamer_id, Array(-1,0,1,2,3,4))){//kamer -1 is de thuispagina
 	$kamer_id = -1;
 }
 // Check connection

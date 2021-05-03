@@ -35,10 +35,10 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 		$knop_naam = "log_uit".$ingelogde_speler;
 		echo"<form method='post' id='log_uit_knop'><input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
 		//geef links naar de kamers, en geef aan welke spelers daar zijn
-		$namen_kamers = Array("park", "13gang", "noordkantine", "tuin");
+		$namen_kamers = Array("park", "13gang", "noordkantine", "tuin", "Muenster");
 		echo "<form class='tabelformulier'>
 			<p class='tabelformulier'><span class='tabelvakje'></span><span class='tabelvakje'>Aanwezige spelers</span><span class='tabelvakje'>Voortgang spel</span></p>";
-		foreach(Array(0,1,2,3) as $kamer_id){
+		foreach(Array(0,1,2,3,4) as $kamer_id){
 			echo "<p class='tabelformulier'>";
 			$spelers = Array();
 			$sql = "SELECT speler_id FROM kamers_spelers WHERE kamer_id = ".$kamer_id;
@@ -49,9 +49,16 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 			while($row = $result->fetch_assoc()){
 				$spelers[] = $row['speler_id'];
 			}
-			echo "<input type='submit' class='tabelformulier' formaction='/".$namen_kamers[$kamer_id].".php' value='".$namen_kamers[$kamer_id]."'>
+			if($kamer_id == 4){
+				echo "<input type='submit' class='tabelformulier' formaction='/".$namen_kamers[$kamer_id].".php' value='Münster'>
 				<span class='tabelvakje'>
 				";
+			}
+			else{
+				echo "<input type='submit' class='tabelformulier' formaction='/".$namen_kamers[$kamer_id].".php' value='".$namen_kamers[$kamer_id]."'>
+					<span class='tabelvakje'>
+					";
+			}
 			foreach($spelers as $speler){
 				if($speler != $spelers[0]){
 					echo ", ";
