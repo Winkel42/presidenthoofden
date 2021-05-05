@@ -221,8 +221,6 @@ function ververs(){
 				case "Pas":
 					//de speler heef gepast
 					//als er maar één persoon over is, mag die beginnen, maar dat wordt ergens anders geregeld
-					//beurt aanpassen in database
-					$spel->volgende_aan_de_beurt();
 					//verwijder alle aangeklikte kaarten van die speler
 					$sql = "UPDATE aangeklikte_kaarten, spellen_spelers_kaarten SET aangeklikt = 0
 					WHERE aangeklikte_kaarten.spel_id=spellen_spelers_kaarten.spel_id AND aangeklikte_kaarten.kaart_id=spellen_spelers_kaarten.kaart_id
@@ -235,8 +233,10 @@ function ververs(){
 					if(!$conn->query($sql)){
 						echo $conn->error."<br>".$sql."<br>";
 					}
-					$spel->verwijder_doorgegeven_kaarten($speler_aan_de_beurt);
-					update($kamer_id);
+					//de doorgegeven kaarten worden hierna niet meer aangegeven
+					$spel->verwijder_doorgegeven_kaarten($speler_aan_de_beurt);			
+					//beurt aanpassen in database
+					$spel->volgende_aan_de_beurt();
 					break;
 				case "Stapel weg":				
 					//als de persoon geen kaarten meer heeft, dan is de stapel net ontploft en wordt de persoon dus laatste

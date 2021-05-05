@@ -524,7 +524,7 @@ class Spel {
 		$aanwezige_spelers = bepaal_aanwezige_spelers();
 		foreach($aanwezige_spelers as $speler){
 			if(!in_array($speler, $this->spelers)){
-				echo $speler." staat in de wachtrij<br>";
+				echo get_name_from_player($speler)." staat in de wachtrij<br>";
 			}
 		}
 		//teken nog andere dingen
@@ -626,8 +626,8 @@ class Spel {
 			//de persoon blijft aan de beurt en mag straks de stapel weghalen, maar dat staat ergens anders
 		}
 		
-		//ook nog de beurtvolgorde aanpassen
-		if(!$ontploft){
+		//ook nog de beurt aanpassen
+		else{
 			$this->volgende_aan_de_beurt();
 		}
 		
