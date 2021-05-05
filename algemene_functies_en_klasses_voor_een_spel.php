@@ -1,5 +1,6 @@
 <?php
 include 'opruimen.php';
+include 'speel_geluid.php';
 //we maken verbinding met de database
 $servername = "localhost";
 $username = "root";
@@ -526,6 +527,10 @@ class Spel {
 			if(!in_array($speler, $this->spelers)){
 				echo get_name_from_player($speler)." staat in de wachtrij<br>";
 			}
+		}
+		//als je aan de beurt bent klinkt er een piep
+		if($ingelogd && $ingelogde_speler == $speler_aan_de_beurt){
+			speel_piep();
 		}
 		//teken nog andere dingen
 		teken_algemene_dingen_na_spel();
