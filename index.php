@@ -3,16 +3,7 @@ include 'lees_en_zet_koekjes.php';
 include 'updaten.php';
 include 'vernieuwscript.php';
 include 'opruimen.php';
-$servername = "localhost";
-$username = "root";
-$dbname = "spellen";
-$password = "";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+include 'maak_verbinding.php';
 
 $aantal_eigen_veranderingen = 0;
 
@@ -33,7 +24,8 @@ function teken_pagina($ingelogd, $ingelogde_speler){
 	if($ingelogd){
 		echo "<h3>u bent ingelogd als ".get_name_from_player($ingelogde_speler)."</h3>";
 		$knop_naam = "log_uit".$ingelogde_speler;
-		echo"<form method='post' id='log_uit_knop'><input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
+		echo"<form method='post'><input type='submit' formaction='instellingen.php' class='menu_knop' value='Instellingen'>
+		<input class='menu_knop' type='submit' name=".$knop_naam." value='log uit'></form><br>";
 		//geef links naar de kamers, en geef aan welke spelers daar zijn
 		$namen_kamers = Array("park", "13gang", "noordkantine", "tuin", "Muenster");
 		echo "<form class='tabelformulier'>

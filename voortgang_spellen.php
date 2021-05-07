@@ -1,15 +1,6 @@
 <?php
 
-//we maken verbinding met de database
-$servername = "localhost";
-$username = "root";
-$dbname = "spellen";
-$password = "";
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+include 'maak_verbinding.php';
 
 $kamer_id = $_GET['kamer_id'];
 

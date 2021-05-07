@@ -1,16 +1,7 @@
 <?php
 include 'opruimen.php';
 include 'speel_geluid.php';
-//we maken verbinding met de database
-$servername = "localhost";
-$username = "root";
-$dbname = "spellen";
-$password = "";
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+include 'maak_verbinding.php';
 
 function teken_script_kaart_klik($kamer_id, $ingelogde_speler){
 	global $doorgeef_fase;
@@ -627,7 +618,7 @@ class Spel {
 				update($kamer_id);
 				return;
 			}
-			
+			update($kamer_id);
 			//de persoon blijft aan de beurt en mag straks de stapel weghalen, maar dat staat ergens anders
 		}
 		

@@ -8,15 +8,7 @@ $kamer_id = $_GET['kamer_id'];
 if(!in_array($kamer_id, range(0,4))){
 	$kamer_id = -2;
 }
-$servername = "localhost";
-$username = "root";
-$dbname = "spellen";
-$password = "";
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+include 'maak_verbinding.php';
 //bepaal het spel_id
 $sql = "SELECT spel_id FROM actieve_spellen WHERE kamer_id=".$kamer_id;
 $result = $conn->query($sql);

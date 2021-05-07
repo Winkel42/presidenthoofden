@@ -4,16 +4,7 @@ include 'lees_en_zet_koekjes.php';
 include 'updaten.php';
 include 'vernieuwscript.php';
 include 'algemene_functies_en_klasses_voor_een_spel.php';
-//we maken verbinding met de database
-$servername = "localhost";
-$username = "root";
-$dbname = "spellen";
-$password = "";
-$conn = new mysqli($servername, $username, $password, $dbname);
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+include 'maak_verbinding.php';
 
 $aantal_eigen_veranderingen = 0;
 
@@ -71,6 +62,9 @@ function teken_algemene_dingen_na_spel(){
 		echo "<form method='post'>";
 	}
 	echo "<input type='submit'; class='menu_knop ".$disable."' name='".$knop_naam."'; value='".$knop_tekst."'>";
+	if($ingelogd){
+		echo "<input type='submit' formaction='instellingen.php' class='menu_knop' value='Instellingen'>";
+	}
 	echo "<input type='submit' class='menu_knop' formaction='index.php'; value='Terug naar thuispagina'></form>";
 	echo "</p>";
 }

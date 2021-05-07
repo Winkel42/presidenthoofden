@@ -1,15 +1,6 @@
 <?php
 function update($kamer_id){
-	//we maken verbinding met de database
-	$servername = "localhost";
-	$username = "root";
-	$dbname = "spellen";
-	$password = "";
-	$conn = new mysqli($servername, $username, $password, $dbname);
-	// Check connection
-	if ($conn->connect_error) {
-	  die("Connection failed: " . $conn->connect_error);
-	}
+	global $conn;
 	$sql = "UPDATE check_veranderingen SET verandering = (verandering + 1)%1000 WHERE kamer_id=".$kamer_id;
 	if(!$conn->query($sql)){
 		echo $conn->error."<br>".$sql."<br>";
