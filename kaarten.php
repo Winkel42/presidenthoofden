@@ -213,24 +213,7 @@ function ververs(){
 					$spel->speel($speler_aan_de_beurt, $kaarten);
 					break;
 				case "Pas":
-					//de speler heef gepast
-					//als er maar één persoon over is, mag die beginnen, maar dat wordt ergens anders geregeld
-					//verwijder alle aangeklikte kaarten van die speler
-					$sql = "UPDATE aangeklikte_kaarten, spellen_spelers_kaarten SET aangeklikt = 0
-					WHERE aangeklikte_kaarten.spel_id=spellen_spelers_kaarten.spel_id AND aangeklikte_kaarten.kaart_id=spellen_spelers_kaarten.kaart_id
-					AND aangeklikte_kaarten.spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
-					if(!$conn->query($sql)){
-						echo $conn->error."<br>".$sql."<br>";
-					}
-					//in de database zetten dat de speler gepast heeft
-					$sql = "UPDATE spellen_spelers SET gepast = 1 WHERE spel_id=".$spel_id." AND speler_id=".$speler_aan_de_beurt;
-					if(!$conn->query($sql)){
-						echo $conn->error."<br>".$sql."<br>";
-					}
-					//de doorgegeven kaarten worden hierna niet meer aangegeven
-					$spel->verwijder_doorgegeven_kaarten($speler_aan_de_beurt);			
-					//beurt aanpassen in database
-					$spel->volgende_aan_de_beurt();
+					$spel->pas($speler_aan_de_beurt);
 					break;
 				case "Stapel weg":				
 					//als de persoon geen kaarten meer heeft, dan is de stapel net ontploft en wordt de persoon dus laatste
@@ -264,6 +247,21 @@ function ververs(){
 			$_POST = Array();
 			return ververs();
 		}
+		//kijk of de speler aan de beurt autopast
+		$aantal_kaarten_in_hand = count(($spel->bepaal_hand($speler_aan_de_beurt))->kaarten);
+		if($stapel_diepte && ($aantal_kaarten_in_hand < $stapel_breedte)){
+			$sql = "SELECT autopas FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND autopas=1";
+			$result = $conn->query($sql);
+			if(!$result){
+				echo $conn->error."<br>".$sql."<br>";
+			}
+			if($result->num_rows){
+				$spel->pas($speler_aan_de_beurt);
+				return ververs();
+			}
+		}
+		
+		
 		//kijk of iemand doorgeeft
 		if($doorgeef_fase){
 			foreach($spel->spelers as $speler){

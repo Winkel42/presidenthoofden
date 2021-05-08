@@ -733,6 +733,29 @@ class Spel {
 		update($kamer_id);
 	}
 	
+	function pas($speler){
+		global $conn;
+		//de speler heef gepast
+		//als er maar één persoon over is, mag die beginnen, maar dat wordt ergens anders geregeld
+		//verwijder alle aangeklikte kaarten van die speler
+		$sql = "UPDATE aangeklikte_kaarten, spellen_spelers_kaarten SET aangeklikt = 0
+		WHERE aangeklikte_kaarten.spel_id=spellen_spelers_kaarten.spel_id AND aangeklikte_kaarten.kaart_id=spellen_spelers_kaarten.kaart_id
+		AND aangeklikte_kaarten.spel_id=".$this->spel_id." AND speler_id=".$speler;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		//in de database zetten dat de speler gepast heeft
+		$sql = "UPDATE spellen_spelers SET gepast = 1 WHERE spel_id=".$this->spel_id." AND speler_id=".$speler;
+		if(!$conn->query($sql)){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		//de doorgegeven kaarten worden hierna niet meer aangegeven
+		$this->verwijder_doorgegeven_kaarten($speler);			
+		//beurt aanpassen in database
+		$this->volgende_aan_de_beurt();
+	}
+
+	
 	function verwijder_doorgegeven_kaarten($speler){
 		global $conn;
 		$sql = "DELETE FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND kaart_id IN (
