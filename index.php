@@ -167,7 +167,7 @@ function bekijk_log_in_en_registratie($ingelogd, $ingelogde_speler){
 					$speler = 1;
 				}
 			}
-			$sql = "INSERT INTO spelers VALUES (?,?,?,0,10000)";
+			$sql = "INSERT INTO spelers VALUES (?,?,?,0,10000,0,0,0,0,0)";
 			$stmt = $conn->prepare($sql);
 			if(!$stmt){
 				echo $conn->error."<br>".$sql."<br>";

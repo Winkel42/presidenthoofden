@@ -325,10 +325,42 @@ class Hand {
 	}
 	function sorteer(){
 		//sorteer de kaarten van de speler in $kaarten
-		$sorteer_voorkeur = "laag_hoog";
-		usort($this->kaarten, "vergelijk_".$sorteer_voorkeur);
+		global $conn, $laag_hoog, $jokers, $vijven;
+		$sql = "SELECT laag_hoog, jokers, vijven FROM spelers WHERE speler_id=".$this->speler;
+		$result = $conn->query($sql);
+		if(!$result){
+			echo $conn->error."<br>".$sql."<br>";
+		}
+		$row = $result->fetch_assoc();
+		$laag_hoog = $row['laag_hoog'];
+		$jokers = $row['jokers'];
+		$vijven = $row['vijven'];
+		usort($this->kaarten, "vergelijk");
 	}
 }
+
+
+function vergelijk($kaart_1, $kaart_2){
+	global $laag_hoog, $jokers, $vijven;
+	if($jokers){
+		if($kaart_1->waarde == 'joker'){
+			return 2*$laag_hoog-1;
+		}
+		if($kaart_2->waarde == 'joker'){
+			return 1-2*$laag_hoog;
+		}
+	}
+	if($vijven){
+		if($kaart_1->waarde == '5'){
+			return -(2*$laag_hoog-1)*(2*$vijven-1);
+		}
+		if($kaart_2->waarde == '5'){
+			return (2*$laag_hoog-1)*(2*$vijven-1);
+		}
+	}
+	return (2*$laag_hoog-1)*vergelijk_laag_hoog($kaart_1, $kaart_2);
+}
+
 
 function vergelijk_laag_hoog($kaart_1, $kaart_2){
 	if($kaart_1->waarde == $kaart_2->waarde){

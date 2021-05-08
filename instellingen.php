@@ -47,8 +47,8 @@ function teken_formulier(){
 			<input type='checkbox' id='autopas' name='autopas'>Autopas (als je te weinig kaarten hebt)</input><br>
 			<input type='checkbox' id='geluid' name='geluid'>Geluid</input><br>
 			Sorteer-voorkeur:<br>
-			<input type='radio' id='laaghoog_0' name='laaghoog' value='0'>laag naar hoog</input>
-			<input type='radio' id='laaghoog_1' name='laaghoog' value='1'>hoog naar laag</input><br>
+			<input type='radio' id='laaghoog_1' name='laaghoog' value='1'>laag naar hoog</input>
+			<input type='radio' id='laaghoog_0' name='laaghoog' value='0'>hoog naar laag</input><br>
 			<input type='radio' id='jokers_0' name='jokers' value='0'>jokers laag</input>
 			<input type='radio' id='jokers_1' name='jokers' value='1'>jokers hoog</input><br>
 			<input type='radio' id='vijven_0' name='vijven' value='0'>5 op de normale plek</input>
