@@ -552,7 +552,7 @@ class Spel {
 			}
 		}
 		//als je aan de beurt bent klinkt er een piep mits dat aanstaat
-		if($ingelogd && $ingelogde_speler == $speler_aan_de_beurt){
+		if($ingelogd && $ingelogde_speler == $speler_aan_de_beurt && $stapel_diepte){
 			$sql = "SELECT geluid FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND geluid=1";
 			$result = $conn->query($sql);
 			if($result->num_rows){
