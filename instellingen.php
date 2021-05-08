@@ -4,13 +4,14 @@ include 'lees_en_zet_koekjes.php';
 
 function formulier_script($speler){
 	global $conn;
-	$sql = "SELECT autopas, laag_hoog, jokers, vijven FROM spelers WHERE speler_id=".$speler;
+	$sql = "SELECT autopas, geluid, laag_hoog, jokers, vijven FROM spelers WHERE speler_id=".$speler;
 	$result = $conn->query($sql);
 	if(!$result || $result->num_rows != 1){
 		echo $conn->error."<br>".$sql."<br>";
 	}
 	$row = $result->fetch_assoc();
 	$autopas = $row['autopas'];
+	$geluid = $row['geluid'];
 	$laag_hoog = $row['laag_hoog'];
 	$jokers = $row['jokers'];
 	$vijven = $row['vijven'];
@@ -18,6 +19,7 @@ function formulier_script($speler){
 	echo "<script>
 		window.onload = function(){
 			var autopasKnop = document.getElementById('autopas');
+			var geluidKnop = document.getElementById('geluid');
 			var laaghoogKnop = document.getElementById('laaghoog_'.concat('".$laag_hoog."'));
 			var jokerKnop = document.getElementById('jokers_'.concat('".$jokers."'));
 			var vijvenKnop = document.getElementById('vijven_'.concat('".$vijven."'));
@@ -25,10 +27,16 @@ function formulier_script($speler){
 			jokerKnop.checked = true;
 			vijvenKnop.checked = true;";
 	if($autopas){
-		echo "autopasKnop.checked = true";
+		echo "autopasKnop.checked = true;";
 	}
 	else{
-		echo "autopasKnop.checked = false";
+		echo "autopasKnop.checked = false;";
+	}
+	if($geluid){
+		echo "geluidKnop.checked = true;";
+	}
+	else{
+		echo "geluidKnop.checked = false;";
 	}
 	echo "};</script>";
 }
@@ -36,7 +44,8 @@ function formulier_script($speler){
 
 function teken_formulier(){
 	echo "<form method = 'post'>
-			<input type='checkbox' id='autopas' name='autopas'>Autopas</input><br>
+			<input type='checkbox' id='autopas' name='autopas'>Autopas (als je te weinig kaarten hebt)</input><br>
+			<input type='checkbox' id='geluid' name='geluid'>Geluid</input><br>
 			Sorteer-voorkeur:<br>
 			<input type='radio' id='laaghoog_0' name='laaghoog' value='0'>laag naar hoog</input>
 			<input type='radio' id='laaghoog_1' name='laaghoog' value='1'>hoog naar laag</input><br>
@@ -68,10 +77,16 @@ if($ingelogd && isset($_POST['opslaan'])){
 	else{
 		$autopas = 0;
 	}
+	if(isset($_POST['geluid'])){
+		$geluid = 1;
+	}
+	else{
+		$geluid = 0;
+	}
 	$laag_hoog = $_POST['laaghoog'];
 	$jokers = $_POST['jokers'];
 	$vijven = $_POST['vijven'];
-	$sql = "UPDATE spelers SET autopas = ".$autopas.", laag_hoog = ".$laag_hoog.", jokers = ".$jokers.", vijven = ".$vijven." WHERE speler_id=".$ingelogde_speler;
+	$sql = "UPDATE spelers SET autopas = ".$autopas.", geluid = ".$geluid.", laag_hoog = ".$laag_hoog.", jokers = ".$jokers.", vijven = ".$vijven." WHERE speler_id=".$ingelogde_speler;
 	if(!$conn->query($sql)){
 		echo $conn->error."<br>".$sql."<br>";
 	}

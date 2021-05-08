@@ -363,7 +363,7 @@ class Spel {
 	}
 	function teken(){
 		teken_algemene_dingen_voor_spel();
-		global $speler_aan_de_beurt, $stapel_diepte, $aantal_spelers_in_stapel, $gepaste_spelers, $aantal_spelers_in_spel, $standen, $stapel_ontploft, $aanwezige_spelers, $doorgeef_fase, $doorgeef_standen;
+		global $speler_aan_de_beurt, $stapel_diepte, $aantal_spelers_in_stapel, $gepaste_spelers, $aantal_spelers_in_spel, $standen, $stapel_ontploft, $aanwezige_spelers, $doorgeef_fase, $doorgeef_standen, $conn;
 		$log_in_informatie = bepaal_log_in_informatie();
 		$ingelogd = $log_in_informatie['ingelogd'];
 		if($ingelogd){
@@ -519,9 +519,13 @@ class Spel {
 				echo get_name_from_player($speler)." staat in de wachtrij<br>";
 			}
 		}
-		//als je aan de beurt bent klinkt er een piep
+		//als je aan de beurt bent klinkt er een piep mits dat aanstaat
 		if($ingelogd && $ingelogde_speler == $speler_aan_de_beurt){
-			speel_piep();
+			$sql = "SELECT geluid FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND geluid=1";
+			$result = $conn->query($sql);
+			if($result->num_rows){
+				speel_piep();
+			}
 		}
 		//teken nog andere dingen
 		teken_algemene_dingen_na_spel();
