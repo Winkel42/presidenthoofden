@@ -783,7 +783,7 @@ function begin_spel(){
 	global $speler_aan_de_beurt;
 	//kijk welke spelers er mee willen doen
 	$spelers = Array();
-	$sql = "SELECT speler_id FROM kamers_spelers WHERE kamer_id=".$kamer_id;
+	$sql = "SELECT speler_id FROM kamers_spelers WHERE kamer_id=".$kamer_id." ORDER BY binnengekomen_tijd ASC";
 	$result = $conn->query($sql);
 	if(!$result){
 		echo $conn->error."<br>".$sql."<br>";
@@ -848,8 +848,7 @@ function begin_spel(){
 		}
 		$speler = $spelers[$index_speler];
 		$sql = "INSERT INTO spellen_spelers_kaarten VALUES(".$spel_id.",".$speler.",".$kaart_id.")";
-		if($conn->query($sql) == FALSE){
-			echo 'database updaten mislukt';
+		if(!$conn->query($sql)){
 			echo $conn->error."<br>".$sql."<br>";
 		}
 		$index_speler = ($index_speler+1)%count($spelers);
@@ -925,10 +924,7 @@ function begin_spel(){
 		}
 		//de klaver 8 is niet aangeklikt (en geen enkele kaart)
 		$conn->query("UPDATE aangeklikte_kaarten SET aangeklikt = 0 WHERE spel_id=".$spel_id);
-	}
-		
-	update($kamer_id);
-	
+	}	
 }
 	
 
@@ -936,15 +932,16 @@ function maak_spel_vanuit_database($spel_id){
 	global $conn;
 	//bepaal wie er meedoen
 	$speler_ids = Array();
-	$sql = "SELECT speler_id FROM spellen_spelers WHERE spel_id='".$spel_id."';";
+	$sql = "SELECT speler_id FROM spellen_spelers WHERE spel_id='".$spel_id."' ORDER BY volgorde ASC";
 	$result = $conn->query($sql);
 	if($result){
 		while($row = $result->fetch_assoc()){
 			$speler_ids[] = $row['speler_id'];
 		}
 	}
-
-	sort($speler_ids);
+	else{
+		echo $conn->error."<br>".$sql."<br>";
+	}
 	//en dan het spel zelf
 	$spel = new Spel($spel_id, $speler_ids);
 	return $spel;

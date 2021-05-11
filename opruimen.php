@@ -16,7 +16,7 @@ function spel_opruimen($kamer_id, $spel_id){
 
 function ruim_oude_spellen_op(){
 	global $conn;
-	$sql = "SELECT kamer_id, spel_id FROM actieve_spellen WHERE TIMESTAMPDIFF(hour, begintijd, CURRENT_TIMESTAMP)>=24";
+	$sql = "SELECT kamer_id, spel_id FROM actieve_spellen WHERE TIMESTAMPDIFF(minute, begintijd, CURRENT_TIMESTAMP)>=180";
 	$result = $conn->query($sql);
 	if(!$result){
 		echo $conn->error."<br>".$sql."<br>";
@@ -25,5 +25,15 @@ function ruim_oude_spellen_op(){
 		$kamer_id = $row['kamer_id'];
 		$spel_id = $row['spel_id'];
 		spel_opruimen($kamer_id, $spel_id);
+	}
+}
+
+function haal_oude_spelers_uit_kamers(){
+	global $conn;
+	$sql = "DELETE FROM kamers_spelers WHERE TIMESTAMPDIFF(minute, binnengekomen_tijd, CURRENT_TIMESTAMP)>=180 AND kamer_id NOT IN (
+				SELECT kamer_id FROM spellen_archief WHERE TIMESTAMPDIFF(minute, eindtijd, CURRENT_TIMESTAMP)<=180
+			)";
+	if(!$conn->query($sql)){
+		echo $conn->error."<br>".$sql."<br>";
 	}
 }

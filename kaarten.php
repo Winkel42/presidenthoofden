@@ -405,7 +405,7 @@ function ververs(){
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}
-			$sql = "INSERT INTO kamers_spelers VALUES (".$kamer_id.",".$ingelogde_speler.", 0)";
+			$sql = "INSERT INTO kamers_spelers VALUES (".$kamer_id.",".$ingelogde_speler.", 0, CURRENT_TIMESTAMP)";
 			if(!$conn->query($sql)){
 				echo $conn->error."<br>".$sql."<br>";
 			}

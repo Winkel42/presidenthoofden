@@ -245,6 +245,7 @@ function ververs(){
 
 
 ruim_oude_spellen_op();
+haal_oude_spelers_uit_kamers();
 ververs();
 
 ?>
