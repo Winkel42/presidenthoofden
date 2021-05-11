@@ -203,7 +203,7 @@ function ververs(){
 		
 		//nu moeten we nog kijken, of er iets moet gebeuren, omdat iemand op een knop gedrukt heeft
 		$knop_naam = "grote_knop_van_".$speler_aan_de_beurt;
-		if(isset($_POST[$knop_naam]) && $_POST[$knop_naam] != "Geef door"){
+		if(isset($_POST[$knop_naam])){
 			switch($_POST[$knop_naam]){
 				case "Speel":
 					//de speler heeft gespeeld
@@ -265,8 +265,8 @@ function ververs(){
 		//kijk of iemand doorgeeft
 		if($doorgeef_fase){
 			foreach($spel->spelers as $speler){
-				$knop_naam = "grote_knop_van_".$speler;
-				if(isset($_POST[$knop_naam]) && $_POST[$knop_naam] == "Geef door"){
+				$knop_naam = "doorgeef_knop_van_".$speler;
+				if(isset($_POST[$knop_naam])){
 					//kijk of de speler al heeft doorgegeven
 					$sql = "SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$spel_id." AND speler_id=".$speler;
 					$result = $conn->query($sql);

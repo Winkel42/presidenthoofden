@@ -140,3 +140,7 @@ input.uitgezet{
 .groot{
 	font-size: 30px;
 }
+
+input{
+	white-space: normal;
+}

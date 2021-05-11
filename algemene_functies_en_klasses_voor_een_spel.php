@@ -490,10 +490,15 @@ class Spel {
 			if($doorgeef_fase){
 				$doorgeef_stand = $doorgeef_standen[$speler];
 				if($doorgeef_stand == 0){
-					$knop_tekst = "Wacht op doorgeven";
+					$knop_tekst = "Wacht";
 				}
 				else{
-					$knop_tekst = "Geef door";
+					if($doorgeef_stand > 0){
+						$knop_tekst = "Geef ".$doorgeef_stand;
+					}
+					else{
+						$knop_tekst = "Geef ".-$doorgeef_stand." hoogste";
+					}
 					//kijk of de speler al heeft doorgegeven
 					global $conn;
 					$sql = "SELECT speler_id FROM doorgegeven_kaarten WHERE spel_id=".$this->spel_id." AND speler_id=".$speler;
@@ -508,6 +513,9 @@ class Spel {
 			}			
 			
 			$knop_naam = "grote_knop_van_".$speler;
+			if($doorgeef_fase){
+				$knop_naam = "doorgeef_knop_van_".$speler;
+			}
 			echo("<form method='post'><input id='speler".$speler."' class='speler_knop ".$disable."' type='submit' name='".$knop_naam."'; value='".$knop_tekst."'/></form></td>");
 			//teken de hand
 			$klikbare_kaarten = ($speler == $speler_aan_de_beurt && $aantal_spelers_in_stapel > 1 && $aantal_spelers_in_spel > 1 && !$stapel_ontploft) || ($doorgeef_fase && $doorgeef_stand);
