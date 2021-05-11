@@ -12,9 +12,7 @@ function teken_script_kaart_klik($kamer_id, $ingelogde_speler){
 				return;
 			}";
 	}
-	echo "
-			var kaartElement = document.getElementById('kaart'+kaart_id);
-			kaartElement.classList.toggle('geselecteerd');
+	echo "	
 			var xmlhttp = new XMLHttpRequest();
 			xmlhttp.open('POST',
 				'geklikte_kaart.php?kaart_id='+kaart_id+'&kamer_id=".$kamer_id."'
@@ -31,6 +29,9 @@ function teken_script_kaart_klik($kamer_id, $ingelogde_speler){
 					if(this.responseText == 'speel_uit'){
 						document.getElementById('speler".$ingelogde_speler."').classList.add('uitgezet');
 					}
+					var kaartElement = document.getElementById('kaart'+kaart_id);
+					kaartElement.classList.toggle('geselecteerd');
+					
 				}
 			}
 		}

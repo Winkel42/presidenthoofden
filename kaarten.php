@@ -249,7 +249,7 @@ function ververs(){
 		}
 		//kijk of de speler aan de beurt autopast
 		$aantal_kaarten_in_hand = count(($spel->bepaal_hand($speler_aan_de_beurt))->kaarten);
-		if($stapel_diepte && ($aantal_kaarten_in_hand < $stapel_breedte)){
+		if($stapel_diepte && ($aantal_kaarten_in_hand < $stapel_breedte) && $aantal_spelers_in_stapel >= 2){
 			$sql = "SELECT autopas FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND autopas=1";
 			$result = $conn->query($sql);
 			if(!$result){
