@@ -188,7 +188,7 @@ function ververs(){
 		$spel = maak_spel_vanuit_database($spel_id);
 				
 		//bepaal een aantal globale variabelen die de stand van het spel aangeven
-		global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen, $doorgeef_fase, $doorgeef_standen;
+		global $conn, $speler_aan_de_beurt, $stapel_diepte, $stapel_breedte, $stapel_waarde, $stapel_jokers, $aantal_spelers_in_spel, $aantal_spelers_in_stapel, $gepaste_spelers, $standen, $doorgeef_fase, $doorgeef_standen, $stapel_ontploft;
 		bepaal_globale_variabelen($spel);	
 		
 		//test:
@@ -249,7 +249,7 @@ function ververs(){
 		}
 		//kijk of de speler aan de beurt autopast
 		$aantal_kaarten_in_hand = count(($spel->bepaal_hand($speler_aan_de_beurt))->kaarten);
-		if($stapel_diepte && ($aantal_kaarten_in_hand < $stapel_breedte) && $aantal_spelers_in_stapel >= 2){
+		if($stapel_diepte && ($aantal_kaarten_in_hand < $stapel_breedte) && $aantal_spelers_in_stapel >= 2 && !$stapel_ontploft){
 			$sql = "SELECT autopas FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND autopas=1";
 			$result = $conn->query($sql);
 			if(!$result){
