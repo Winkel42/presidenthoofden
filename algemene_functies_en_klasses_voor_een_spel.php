@@ -560,12 +560,19 @@ class Spel {
 				echo get_name_from_player($speler)." staat in de wachtrij<br>";
 			}
 		}
-		//als je aan de beurt bent klinkt er een piep mits dat aanstaat
-		if($ingelogd && $ingelogde_speler == $speler_aan_de_beurt && $stapel_diepte){
-			$sql = "SELECT geluid FROM spelers WHERE speler_id=".$speler_aan_de_beurt." AND geluid=1";
+		//speel geluiden
+		if($ingelogd){
+			$sql = "SELECT geluid from spelers where speler_id=".$ingelogde_speler." AND geluid=1";
 			$result = $conn->query($sql);
 			if($result->num_rows){
-				speel_piep();
+				//piep als je aan de beurt bent
+				if($ingelogde_speler == $speler_aan_de_beurt && $stapel_diepte){
+					speel_piep();
+				}
+				//boem als de stapel ontploft
+				if($stapel_ontploft){
+					speel_boem();
+				}
 			}
 		}
 		//teken nog andere dingen
