@@ -301,7 +301,12 @@ function ververs(){
 							}
 						}
 						else{
-							echo "<script>alert('Geef goeie shit door');</script>";
+							if($doorgeef_stand > 0){
+								echo "<script>alert('Geef ".$doorgeef_stand." kaarten door');</script>";
+							}
+							else{
+								echo "<script>alert('Geef ".-$doorgeef_stand." hoogste kaarten door');</script>";
+							}
 						}
 						$_POST = Array();
 						return ververs();
