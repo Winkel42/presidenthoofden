@@ -312,7 +312,7 @@ function ververs(){
 		//we kijken, of iemand kaarten aangeklikt heeft, die gespeeld kunnen worden
 		$hand = $spel->bepaal_hand($speler_aan_de_beurt);
 		$kaarten = $hand->bepaal_aangeklikte_kaarten();
-		if(is_legaal($kaarten) && $stapel_diepte > 0){
+		if(is_legaal($kaarten) && $stapel_diepte > 0 && $ingelogd && $ingelogde_speler == $speler_aan_de_beurt){
 			//in dat geval worden de kaarten inderdaad gespeeld
 			//haal die kaarten uit de hand van de speler (in de database) en stop ze in de stapel
 			$spel->speel($speler_aan_de_beurt, $kaarten);
